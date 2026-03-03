@@ -802,10 +802,10 @@ VM|<input type="date" id="salesEndDate" class="form-input" style="width:140px;" 
 </div>
 <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
  
- <!-- 기본정보 섹션 -->
+ <!-- 基本정보 섹션 -->
  <div class="form-section">
   <div class="form-section-title">
-   <span class="section-icon">🏥</span> 기본정보
+   <span class="section-icon">🏥</span> 基本정보
   </div>
   <div class="form-grid">
    <div class="form-row">
@@ -814,7 +814,7 @@ VM|<input type="date" id="salesEndDate" class="form-input" style="width:140px;" 
    </div>
    <div class="form-row">
     <label class="form-label"><span class="label-icon">👤</span> 환자명 <span class="req">*</span></label>
-<input class="form-input" id="m-patient" placeholder=" 환자명을 입력하세요">
+    <input class="form-input" id="m-patient" placeholder="患者명을 입력하세요">
    </div>
   </div>
  </div>
@@ -892,7 +892,7 @@ VM|<input type="date" id="salesEndDate" class="form-input" style="width:140px;" 
 <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
  
  <div class="form-section">
-  <div class="form-section-title"><span class="section-icon">🏥</span> 기본정보</div>
+  <div class="form-section-title"><span class="section-icon">🏥</span> 基本정보</div>
   <div class="form-grid">
    <div class="form-row">
     <label class="form-label"><span class="label-icon">🏢</span> 거래처명(치과명) <span class="req">*</span></label>
@@ -1041,55 +1041,6 @@ VM|<input type="date" id="salesEndDate" class="form-input" style="width:140px;" 
 const supabaseUrl = 'https://zxaqrwzcmyhbfvyahwlc.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4YXFyd3pjbXloYmZ2eWFod2xjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTEwODksImV4cCI6MjA4NzQ2NzA4OX0.3x51KnmoOr5sb5XDU-ZheWLY55gNicPkNJxx3TJNsks';
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-// ═══════════════════════════════════
-// Supabase Auth 세션 관리
-// ═══════════════════════════════════
-let supabaseSession = null;
-
-// 세션 복원 (페이지 로드 시)
-async function initAuth() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session) {
-    supabaseSession = session;
-    await restoreUserFromSession(session);
-  }
-}
-
-// 세션에서 사용자 복원
-async function restoreUserFromSession(session) {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return;
-  
-  // admin@iroom.com 이면 관리자
-  if (user.email === 'admin@iroom.com') {
-    currentUser = { type: 'admin', name: '이룸덴탈랩', email: user.email };
-  } else {
-    // 거래처는 clinics 테이블에서 찾기
-    const clinic = clinics.find(c => c.email === user.email);
-    if (clinic) {
-      currentUser = { type: 'clinic', name: clinic.name, id: clinic.id, email: user.email };
-    }
-  }
-  
-  if (currentUser) {
-    localStorage.setItem('iroom_user', JSON.stringify(currentUser));
-    showMainApp();
-  }
-}
-
-// Auth 상태 변경 리스너
-supabaseClient.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN' && session) {
-    supabaseSession = session;
-    restoreUserFromSession(session);
-  } else if (event === 'SIGNED_OUT') {
-    supabaseSession = null;
-    currentUser = null;
-    localStorage.removeItem('iroom_user');
-  }
-});
-
-
 
 // ═══════════════════════════════════
 // 데이터
@@ -1127,7 +1078,7 @@ let settings = {
 
 // 기본 관리자 비밀번호 (항상 이 값으로 검증)
 const ADMIN_ID = '이룸덴탈랩';
-const ADMIN_PW = 'jin7102__!!';
+const ADMIN_PW = '1234';
 
 // 기본 보철 단가 (개당 가격)
 let prosthetics = [
@@ -1140,52 +1091,17 @@ let prosthetics = [
   {name:'골드 크라운',price:200000},
   ];
 let clinics = [
-  {id:1,name:'서울치과',businessNumber:'1234567890',phone:'02-1234-5678',director:'김원장',email:'seoul@dental.co.kr',password:'67890',priceAdjust:0},
-  {id:2,name:'부산치과',businessNumber:'2345678901',phone:'051-1234-5678',director:'이원장',email:'busan@dental.co.kr',password:'78901',priceAdjust:0},
-  {id:3,name:'대구치과',businessNumber:'3456789012',phone:'053-1234-5678',director:'박원장',email:'daegu@dental.co.kr',password:'89012',priceAdjust:0}
+  {id:1,name:'서울치과',businessNumber:'123-45-67890',phone:'02-1234-5678',director:'김원장',email:'seoul@dental.co.kr',password:'67890',priceAdjust:0},
+  {id:2,name:'부산치과',businessNumber:'234-56-78901',phone:'051-1234-5678',director:'이원장',email:'busan@dental.co.kr',password:'8901',priceAdjust:0},
+  {id:3,name:'대구치과',businessNumber:'345-67-89012',phone:'053-1234-5678',director:'박원장',email:'daegu@dental.co.kr',password:'9012',priceAdjust:0}
 ];
 
+// 케이스
 let cases = [];
 
 // 네트워크 상태 감지
 let isOnline = navigator.onLine;
 window.addEventListener('online', () => { isOnline = true; toast('🌐 네트워크 연결됨'); });
-window.addEventListener('offline', () => { isOnline = false; toast('⚠️ 네트워크 연결 끊김 - 로컬 모드'); });
-
-// localStorage에서 데이터 로드 함수
-function loadFromLocalStorage() {
-  // 거래처 데이터 로드
-  const savedClinics = localStorage.getItem('iroom_clinics');
-  if(savedClinics) {
-    clinics = JSON.parse(savedClinics);
-  }
-  
-  // 보철 데이터 로드
-  const savedProsthetics = localStorage.getItem('iroom_prosthetics');
-  if(savedProsthetics) {
-    prosthetics = JSON.parse(savedProsthetics);
-  }
-  
-  // 설정 로드
-  const savedSettings = localStorage.getItem('iroom_settings');
-  if(savedSettings) {
-    settings = JSON.parse(savedSettings);
-  }
-  
-  // 케이스 데이터 로드
-  const savedCases = localStorage.getItem('iroom_cases');
-  if(savedCases) {
-    cases = JSON.parse(savedCases);
-    cases.forEach(c => {
-      if(!c.unitType) c.unitType = 'single';
-      if(c.isRemake === undefined) c.isRemake = false;
-    });
-  }
-  
-  console.log('localStorage에서 데이터 로드 완료');
-}
-
-// 네트워크 상태 감지 (이미 위에서 선언됨)
 window.addEventListener('online', () => { isOnline = true; toast('🌐 네트워크 연결됨'); });
 window.addEventListener('offline', () => { isOnline = false; toast('⚠️ 네트워크 연결 끊김 - 로컬 모드'); });
 
@@ -1259,31 +1175,18 @@ async function loadData() {
       }
     }
 
-    // Supabase에서 데이터 로드 시도
-    if (clinicsRes.data && clinicsRes.data.length > 0 && !clinicsRes.error) {
+    if (clinicsRes.data && clinicsRes.data.length > 0) {
       clinics = clinicsRes.data;
-      clinics.forEach(c => {
-        if(c.price_adjust !== undefined && c.priceAdjust === undefined) c.priceAdjust = c.price_adjust;
-        if(c.priceAdjust === undefined) c.priceAdjust = 0;
-        if(c.business_number !== undefined && !c.businessNumber) c.businessNumber = c.business_number;
-        if(!c.prices) c.prices = {};
-        if(!c.remakes) c.remakes = [];
-      });
       localStorage.setItem('iroom_clinics', JSON.stringify(clinics));
     } else {
-      // localStorage에서 시도
       const savedClinics = localStorage.getItem('iroom_clinics');
       if(savedClinics) {
         clinics = JSON.parse(savedClinics);
         clinics.forEach(c => {
-          if(c.price_adjust !== undefined && c.priceAdjust === undefined) c.priceAdjust = c.price_adjust;
-          if(c.priceAdjust === undefined) c.priceAdjust = 0;
-          if(c.business_number !== undefined && !c.businessNumber) c.businessNumber = c.business_number;
-          if(!c.prices) c.prices = {};
           if(!c.remakes) c.remakes = [];
         });
       }
-      }
+    }
 
     if (prostheticsRes.data && prostheticsRes.data.length > 0) {
       prosthetics = prostheticsRes.data;
@@ -1356,66 +1259,65 @@ async function loadData() {
 }
 
 async function saveData() {
-  // localStorage에 저장
-  localStorage.setItem('iroom_cases', JSON.stringify(cases));
-  localStorage.setItem('iroom_clinics', JSON.stringify(clinics));
-  localStorage.setItem('iroom_prosthetics', JSON.stringify(prosthetics));
-  localStorage.setItem('iroom_settings', JSON.stringify(settings));
-  if(currentUser) localStorage.setItem('iroom_user', JSON.stringify(currentUser));
-
-  // Supabase에 저장 (에러 무시)
   try {
+    // localStorage에 저장
+    localStorage.setItem('iroom_cases', JSON.stringify(cases));
+    localStorage.setItem('iroom_clinics', JSON.stringify(clinics));
+    localStorage.setItem('iroom_prosthetics', JSON.stringify(prosthetics));
+    localStorage.setItem('iroom_settings', JSON.stringify(settings));
+    if(currentUser) localStorage.setItem('iroom_user', JSON.stringify(currentUser));
+
+    // Supabase에 저장
     // cases 테이블 동기화
     for (const c of cases) {
-      if(!c.id) continue;
       await supabaseClient.from('cases').upsert({
         id: c.id,
-        date: c.date || null,
-        clinic: c.clinic || null,
-        patient: c.patient || null,
-        patient_original: c.patientOriginal || null,
-        tooth: c.tooth || null,
-        type: c.type || null,
+        date: c.date,
+        clinic: c.clinic,
+        patient: c.patient,
+        tooth: c.tooth,
+        type: c.type,
         unit_type: c.unitType || 'single',
         is_remake: c.isRemake || false,
-        status: c.status || 'working',
+        status: c.status,
         ship_date: c.shipDate || null,
-        memo: c.memo || null,
-        created_at: c.createdAt || null
-      }, { onConflict: 'id' }).then(() => {}).catch(() => {});
+        memo: c.memo || null
+      }, { onConflict: 'id' });
     }
+
     // clinics 테이블 동기화
     for (const clinic of clinics) {
       await supabaseClient.from('clinics').upsert({
         id: clinic.id,
-        name: clinic.name || null,
-        business_number: clinic.businessNumber || null,
-        phone: clinic.phone || null,
-        director: clinic.director || null,
-        email: clinic.email || null,
-        password: clinic.password || null,
+        name: clinic.name,
+        business_number: clinic.businessNumber,
+        phone: clinic.phone,
+        director: clinic.director,
+        email: clinic.email,
+        password: clinic.password,
         prices: clinic.prices || {},
-        remakes: clinic.remakes || [],
-        price_adjust: clinic.priceAdjust || 0
-      }, { onConflict: 'id' }).then(() => {}).catch(() => {});
+        remakes: clinic.remakes || []
+      }, { onConflict: 'id' });
     }
+
     // prosthetics 테이블 동기화
     for (const p of prosthetics) {
       await supabaseClient.from('prosthetics').upsert({
         id: prosthetics.indexOf(p) + 1,
-        name: p.name || null,
-        price: p.price || 0
-      }).then(() => {}).catch(() => {});
+        name: p.name,
+        price: p.price
+      });
     }
+
   } catch(e) {
-    // Supabase 실패 시 로컬만 사용
+    console.warn('Supabase 저장 실패 (localStorage에만 저장됨):', e);
   }
 }
 
 // ═══════════════════════════════════
 // 로그인
 // ═══════════════════════════════════
-async function handleLogin(e) {
+function handleLogin(e) {
   e.preventDefault();
   
   const id = document.getElementById('loginIdField').value.trim();
@@ -1447,11 +1349,12 @@ async function handleLogin(e) {
   btnEl.textContent = '로그인 중...';
   btnEl.disabled = true;
   
-  // 관리자 로그인 fallback (기존 방식)
-  if(id === '이룸덴탈랩' && pw === 'jin7102__!!') {
+  // 관리자 로그인 (즉시 실행)
+  if(id === ADMIN_ID && pw === ADMIN_PW) {
+    // 성공 시 시도 횟수 초기화
     loginAttempts = 0;
     localStorage.setItem('iroom_loginAttempts', '0');
-    currentUser = { type: 'admin', name: '이룸덴탈랩', email: 'admin@iroom.com' };
+    currentUser = { type: 'admin', name: '이룸덴탈랩' };
     localStorage.setItem('iroom_user', JSON.stringify(currentUser));
     showMainApp();
     btnEl.classList.remove('loading');
@@ -1460,101 +1363,43 @@ async function handleLogin(e) {
     return;
   }
   
-  // 거래처 로그인 (ID = 치과명, PW = 사업자번호 끝자리 5개)
+  // 치과 로그인
   const clinic = clinics.find(c => c.name === id);
-  if (clinic) {
-    // 거래처: 사업자번호 끝자리 5개로 검증
-    const bizNumber = (clinic.businessNumber || '').replace(/-/g, '');
-    const expectedPw = bizNumber.slice(-5);
-    
-    if (pw === expectedPw) {
-      loginAttempts = 0;
-      localStorage.setItem('iroom_loginAttempts', '0');
-      currentUser = { type: 'clinic', name: clinic.name, id: clinic.id, email: clinic.email };
-      localStorage.setItem('iroom_user', JSON.stringify(currentUser));
-      showMainApp();
-      btnEl.classList.remove('loading');
-      btnEl.textContent = '로그인';
-      btnEl.disabled = false;
-      return;
-    }
-  }
-  
-  // Supabase Auth 로그인 시도
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email: id,
-    password: pw
-  });
-  
-  if (error) {
-    // 로그인 실패
-    loginAttempts++;
-    localStorage.setItem('iroom_loginAttempts', loginAttempts.toString());
-    isLoginBlocked = loginAttempts >= 10;
-    
-    let errorMessage = '로그인에 실패했습니다.';
-    if (error.message.includes('Invalid login credentials')) {
-      errorMessage = '아이디 또는 비밀번호가 올바르지 않습니다.';
-    } else if (error.message.includes('Email not confirmed')) {
-      errorMessage = '이메일 인증이 필요합니다.';
-    }
-    
-    if(isLoginBlocked) {
-      errorMsgEl.textContent = '로그인 시도 횟수 초과. 관리자에게 문의하세요.';
-      attemptCountEl.style.display = 'none';
-    } else {
-      const remaining = 10 - loginAttempts;
-      errorMsgEl.textContent = errorMessage;
-      remainingEl.textContent = remaining;
-      attemptCountEl.style.display = 'block';
-    }
-    
-    errorEl.classList.add('show');
-    setTimeout(() => errorEl.classList.remove('show'), 3000);
+  if(clinic && clinic.password === pw) {
+    loginAttempts = 0;
+    localStorage.setItem('iroom_loginAttempts', '0');
+    currentUser = { type: 'clinic', name: clinic.name, id: clinic.id };
+    localStorage.setItem('iroom_user', JSON.stringify(currentUser));
+    showMainApp();
     btnEl.classList.remove('loading');
     btnEl.textContent = '로그인';
     btnEl.disabled = false;
     return;
   }
   
-  // 로그인 성공
-  loginAttempts = 0;
-  localStorage.setItem('iroom_loginAttempts', '0');
-  supabaseSession = data.session;
+  // 로그인 실패
+  loginAttempts++;
+  localStorage.setItem('iroom_loginAttempts', loginAttempts.toString());
+  isLoginBlocked = loginAttempts >= 10;
   
-  // 사용자 유형 결정
-  const { user } = data.session;
-  
-  // admin@iroom.com 이면 관리자
-  if (user.email === 'admin@iroom.com') {
-    currentUser = { type: 'admin', name: '이룸덴탈랩', email: user.email };
+  if(isLoginBlocked) {
+    errorMsgEl.textContent = '로그인 시도 횟수 초과. 관리자에게 문의하세요.';
+    attemptCountEl.style.display = 'none';
   } else {
-    // 거래처는 clinics 테이블에서 찾기
-    const clinic = clinics.find(c => c.email === user.email);
-    if (clinic) {
-      currentUser = { type: 'clinic', name: clinic.name, id: clinic.id, email: user.email };
-    } else {
-      errorMsgEl.textContent = '등록된 거래처가 없습니다. 관리자에게 문의하세요.';
-      errorEl.classList.add('show');
-      await supabaseClient.auth.signOut();
-      btnEl.classList.remove('loading');
-      btnEl.textContent = '로그인';
-      btnEl.disabled = false;
-      return;
-    }
+    const remaining = 10 - loginAttempts;
+    errorMsgEl.textContent = '아이디 또는 비밀번호가 올바르지 않습니다.';
+    remainingEl.textContent = remaining;
+    attemptCountEl.style.display = 'block';
   }
   
-  localStorage.setItem('iroom_user', JSON.stringify(currentUser));
-  showMainApp();
+  errorEl.classList.add('show');
+  setTimeout(() => errorEl.classList.remove('show'), 3000);
   btnEl.classList.remove('loading');
   btnEl.textContent = '로그인';
   btnEl.disabled = false;
 }
 
-async function logout() {
-  // Supabase Auth 로그아웃
-  await supabaseClient.auth.signOut();
-  supabaseSession = null;
+function logout() {
   currentUser = null;
   localStorage.removeItem('iroom_user');
   document.getElementById('loginScreen').style.display = 'flex';
@@ -1811,19 +1656,11 @@ function getToothCount(tooth) {
 }
 
 // 총 가격 계산 (모든 보철 = 개수 × 단가, 리메이크는 0원)
-// 가격할인(%) 적용
 function calculateTotalPrice(type, clinicName, tooth, isRemake) {
   if(isRemake) return 0;
   const unitPrice = getPrice(type, clinicName);
   const toothCount = getToothCount(tooth);
-  const subtotal = unitPrice * toothCount;
-  
-  // 거래처별 할인 적용
-  const clinic = clinics.find(c => c.name === clinicName);
-  const discount = clinic && clinic.priceAdjust ? clinic.priceAdjust : 0;
-  const discountAmount = subtotal * (discount / 100);
-  
-  return Math.round(subtotal - discountAmount);
+  return unitPrice * toothCount;
 }
 
 function renderTable() {
@@ -1883,7 +1720,7 @@ function renderTable() {
     const toothCount = getToothCount(c.tooth);
     const isRemake = c.isRemake || false;
     const totalPrice = calculateTotalPrice(c.type, c.clinic, c.tooth, isRemake);
-    const sm = statusMap[c.status] || {label:'알수없음',cls:'status-working'};
+    const sm = statusMap[c.status];
     const typeLabel = isRemake ? '<span style="color:var(--red);font-weight:700;">🔄 리메이크</span>' : (c.unitType === 'bridge' ? '브릿지' : '싱글');
     const dateDisplay = c.createdAt && currentUser.type === 'admin' 
       ? c.createdAt.slice(0, 16).replace('T', ' ') 
@@ -2180,7 +2017,7 @@ function renderClinicChart(filtered) {
 // ═══════════════════════════════════
 function updateSalesMonthSelect() {
   const select = document.getElementById('salesMonth');
-  const months = [...new Set(cases.filter(c => c.date).map(c => c.date.slice(0,7)))].sort().reverse();
+  const months = [...new Set(cases.map(c => c.date.slice(0,7)))].sort().reverse();
   select.innerHTML = '<option value="">전체</option>' + months.map(m => '<option value="' + m + '">' + m + '</option>').join('');
 }
 
@@ -2233,8 +2070,7 @@ function renderSales() {
   
   // 월별 추이
   const monthlyData = {};
-filtered.forEach(c => {
-    if(!c.date) return;
+  filtered.forEach(c => {
     const month = c.date.slice(0,7);
     if(!monthlyData[month]) monthlyData[month] = {count:0,sales:0};
     monthlyData[month].count++;
@@ -2343,7 +2179,7 @@ function renderClinics() {
   </tr>`).join('');
 }
 
-async function submitClinic() {
+function submitClinic() {
   const name = document.getElementById('new-clinic-name').value.trim();
   const biz = document.getElementById('new-clinic-biz').value.trim();
   const phone = document.getElementById('new-clinic-phone').value.trim();
@@ -2360,7 +2196,7 @@ async function submitClinic() {
     return;
   }
   
-  const password = biz.replace(/-/g, '').slice(-5);
+  const password = biz.slice(-5);
   
   clinics.push({
     id: Date.now(),
@@ -2370,21 +2206,15 @@ async function submitClinic() {
     director,
     email,
     password,
-    priceAdjust: 0,
     prices: {}
   });
   
-  await saveData();
+  saveData();
   closeModal('clinicModal');
   renderClinics();
   updateClinicFilter();
   populateSelects();
   toast('✅ 거래처 추가 완료');
-  
-  // 페이지 새로고침으로 데이터 동기화 확인
-  setTimeout(() => {
-    window.location.reload();
-  }, 1000);
 }
 
 function showClinicPw(name) {
@@ -2424,18 +2254,6 @@ function editClinic(id) {
     <div class="form-row"><label class="form-label">원장님</label><input class="form-input" id="edit-clinic-director" value="${clinic.director || ''}"></div>
     <div class="form-row"><label class="form-label">이메일</label><input class="form-input" id="edit-clinic-email" value="${clinic.email || ''}"></div>
     <div class="form-row"><label class="form-label">비밀번호</label><input class="form-input" id="edit-clinic-pw" value="${clinic.password}"></div>
-    <div class="form-row"><label class="form-label">가격할인(%)</label><input type="number" class="form-input" id="edit-clinic-priceadjust" value="${clinic.priceAdjust || 0}" min="0" max="100" step="1"></div>
-    <div class="form-row" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-      <div class="form-label" style="margin-bottom:8px;">💰 보철별 단가 설정</div>
-      <div id="clinic-prices-list" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
-        ${prosthetics.map(p => `
-          <div style="background:var(--surface2);padding:8px;border-radius:6px;">
-            <div style="font-size:12px;font-weight:600;margin-bottom:4px;">${p.name}</div>
-            <input type="number" class="form-input" id="edit-price-${p.name}" value="${clinic.prices && clinic.prices[p.name] ? clinic.prices[p.name] : p.price || 0}" min="0" placeholder="단가">
-          </div>
-        `).join('')}
-      </div>
-    </div>
     <div class="form-row" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <div class="form-label" style="display:flex;justify-content:space-between;align-items:center;">
         <span>🔄 리메이크 기록 <span style="font-weight:400;color:var(--text3);">(${remakes.length}건)</span></span>
@@ -2496,16 +2314,6 @@ function saveClinicEdit(id) {
     clinic.director = document.getElementById('edit-clinic-director').value.trim();
     clinic.email = document.getElementById('edit-clinic-email').value.trim();
     clinic.password = document.getElementById('edit-clinic-pw').value.trim();
-    clinic.priceAdjust = parseInt(document.getElementById('edit-clinic-priceadjust').value) || 0;
-    clinic.price_adjust = clinic.priceAdjust;
-    
-    // 보철별 단가 저장
-    if(!clinic.prices) clinic.prices = {};
-    prosthetics.forEach(p => {
-      const priceEl = document.getElementById('edit-price-' + p.name);
-      if(priceEl) clinic.prices[p.name] = parseInt(priceEl.value) || 0;
-    });
-    
     saveData();
     closeModal('clinicInfoModal');
     renderClinics();
@@ -2585,33 +2393,41 @@ function toggleShowPrice() {
   toast(settings.showPriceToClinic ? '✅ 가격이 치과에 공개됩니다' : '✅ 가격이 숨겨졌습니다');
 }
 
-async function changePassword() {
+function changePassword() {
   const current = document.getElementById('currentPw').value;
   const newPw = document.getElementById('newPw').value;
   const confirm = document.getElementById('confirmPw').value;
+  
+  if(currentUser.type === 'admin') {
+    // 관리자는 항상 기본 비밀번호로 검증
+    if(current !== ADMIN_PW) {
+      alert('현재 비밀번호가 올바르지 않습니다');
+      return;
+    }
+  } else {
+    const clinic = clinics.find(c => c.name === currentUser.name);
+    if(current !== clinic.password) {
+      alert('현재 비밀번호가 올바르지 않습니다');
+      return;
+    }
+  }
   
   if(newPw !== confirm) {
     alert('새 비밀번호가 일치하지 않습니다');
     return;
   }
   
-  if(newPw.length < 6) {
-    alert('비밀번호는 6자 이상이어야 합니다');
+  if(currentUser.type === 'admin') {
+    alert('관리자 비밀번호는 변경할 수 없습니다');
     return;
+  } else {
+    const clinic = clinics.find(c => c.name === currentUser.name);
+    clinic.password = newPw;
   }
   
-  // Supabase Auth로 비밀번호 변경
-  const { error } = await supabaseClient.auth.updateUser({
-    password: newPw
-  });
-  
-  if (error) {
-    alert('비밀번호 변경 실패: ' + error.message);
-    return;
-  }
-  
+  saveData();
   closeModal('passwordModal');
-  alert('비밀번호가 변경되었습니다.\n다음 로그인부터 새 비밀번호를 사용하세요.');
+  alert('비밀번호가 변경되었습니다');
   toast('🔐 비밀번호 변경 완료');
 }
 

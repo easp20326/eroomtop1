@@ -1,0 +1,21 @@
+project/
+
+.ai
+   AI_CORE_RULES.md
+   AI_AUTOPILOT.md
+   AI_DEBUG_RULES.md
+   AI_WORDPRESS_RULES.md
+
+spec
+   PRODUCT_SPEC.md
+
+design
+   SYSTEM_ARCHITECTURE.md
+
+tasks
+   TASK_BOARD.md
+
+logs
+   AI_START_LOG.md
+   AI_END_LOG.md
+   AI_CONTEXT.md

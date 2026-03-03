@@ -1,0 +1,24 @@
+WordPress Plugin 기반
+
+플러그인
+
+iroom-portal
+
+구성
+
+CPT
+Shortcode
+API
+Admin UI
+
+데이터 흐름
+
+치과 등록
+↓
+케이스 생성
+↓
+상태 변경
+↓
+로그 기록
+↓
+치과 확인

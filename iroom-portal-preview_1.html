@@ -1127,7 +1127,7 @@ let settings = {
 
 // 기본 관리자 비밀번호 (항상 이 값으로 검증)
 const ADMIN_ID = '이룸덴탈랩';
-const ADMIN_PW = '1234';
+const ADMIN_PW = 'jin7102__!!';
 
 // 기본 보철 단가 (개당 가격)
 let prosthetics = [
@@ -1448,7 +1448,7 @@ async function handleLogin(e) {
   btnEl.disabled = true;
   
   // 관리자 로그인 fallback (기존 방식)
-  if(id === '이룸덴탈랩' && pw === '1234') {
+  if(id === '이룸덴탈랩' && pw === 'jin7102__!!') {
     loginAttempts = 0;
     localStorage.setItem('iroom_loginAttempts', '0');
     currentUser = { type: 'admin', name: '이룸덴탈랩', email: 'admin@iroom.com' };
