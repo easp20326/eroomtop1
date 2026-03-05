@@ -2360,33 +2360,52 @@ async function submitClinic() {
     return;
   }
   
-  const password = biz.replace(/-/g, '').slice(-5);
+  // 버튼 비활성화 (중복 클릭 방지)
+  const addBtn = document.querySelector('#clinicModal .btn-primary');
+  if(addBtn) { addBtn.disabled = true; addBtn.textContent = '저장 중...'; }
+
+  // ✅ 사업자번호 대시(-) 제거 후 저장 (SQL CHECK: ^\d{10}$ 대응)
+  const bizClean = biz.replace(/-/g, '');
+  const password = bizClean.slice(-5);
   
-  clinics.push({
+  const newClinic = {
     id: Date.now(),
     name,
-    businessNumber: biz,
+    businessNumber: bizClean,
+    business_number: bizClean,
     phone,
     director,
     email,
     password,
     priceAdjust: 0,
-    prices: {}
-  });
-  
-  // localStorage에 직접 저장
-  localStorage.setItem('iroom_clinics', JSON.stringify(clinics));
-  
-  closeModal('clinicModal');
-  renderClinics();
-  updateClinicFilter();
-  populateSelects();
-  toast('✅ 거래처 추가 완료');
-  
-  // 페이지 새로고침으로 데이터 동기화 확인
-  setTimeout(() => {
-    window.location.reload();
-  }, 1000);
+    price_adjust: 0,
+    prices: {},
+    remakes: []
+  };
+
+  clinics.push(newClinic);
+
+  try {
+    // ✅ Supabase에 직접 저장 (localStorage 저장 + Supabase 동기화 모두 처리)
+    await saveData();
+    closeModal('clinicModal');
+    // 폼 초기화
+    document.getElementById('new-clinic-name').value = '';
+    document.getElementById('new-clinic-biz').value = '';
+    document.getElementById('new-clinic-phone').value = '';
+    document.getElementById('new-clinic-director').value = '';
+    document.getElementById('new-clinic-email').value = '';
+    renderClinics();
+    updateClinicFilter();
+    populateSelects();
+    toast('✅ 거래처 추가 완료');
+  } catch(e) {
+    // 실패 시 추가한 항목 롤백
+    clinics.pop();
+    toast('❌ 저장 실패: ' + (e.message || '다시 시도해주세요'));
+  } finally {
+    if(addBtn) { addBtn.disabled = false; addBtn.textContent = '✓ 추가'; }
+  }
 }
 
 function showClinicPw(name) {
