@@ -2374,7 +2374,9 @@ async function submitClinic() {
     prices: {}
   });
   
-  await saveData();
+  // localStorage에 직접 저장
+  localStorage.setItem('iroom_clinics', JSON.stringify(clinics));
+  
   closeModal('clinicModal');
   renderClinics();
   updateClinicFilter();
