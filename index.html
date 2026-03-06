@@ -920,7 +920,7 @@ VM|<input type="date" id="salesEndDate" class="form-input" style="width:140px;" 
 </div>
 <div class="modal-footer">
 <button class="btn btn-secondary" onclick="closeModal('clinicModal')">취소</button>
-<button class="btn btn-primary" onclick="submitClinic()"><span class="btn-icon">✓</span> 추가</button>
+<button class="btn btn-primary" onclick="(async () => { try { await submitClinic(); } catch(e) { alert('오류: ' + e.message); } })()"><span class="btn-icon">✓</span> 추가</button>
 </div>
 </div>
 </div>
