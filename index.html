@@ -205,6 +205,15 @@ input,select,textarea{font-family:inherit}
 .form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;transition:border-color .15s}
 .form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--blue)}
 .form-textarea{min-height:80px;resize:vertical}
+
+/* 사진 업로드 */
+.photo-drop-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)}
+.photo-drop-zone:hover{border-color:var(--blue);background:var(--blue-l)}
+.photo-drop-zone.dragover{border-color:var(--blue);background:var(--blue-l)}
+.photo-preview-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+.photo-preview{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+.photo-preview img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px}
+.photo-count{font-size:12px;color:var(--text3);text-align:center;margin-top:8px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
 /* 접수등록 모달 개선 */
@@ -883,6 +892,8 @@ VM|<input type="date" id="salesEndDate" class="form-input" style="width:140px;" 
    <textarea class="form-textarea" id="m-memo" placeholder="특이사항이 있으면 입력하세요"></textarea>
   </div>
  </div>
+
+</div>
 
  <!-- 사진 섹션 -->
  <div class="form-section">
