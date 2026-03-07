@@ -205,15 +205,6 @@ input,select,textarea{font-family:inherit}
 .form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;transition:border-color .15s}
 .form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--blue)}
 .form-textarea{min-height:80px;resize:vertical}
-
-/* 사진 업로드 */
-.photo-drop-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)}
-.photo-drop-zone:hover{border-color:var(--blue);background:var(--blue-l)}
-.photo-drop-zone.dragover{border-color:var(--blue);background:var(--blue-l)}
-.photo-preview-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
-.photo-preview{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
-.photo-preview img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px}
-.photo-count{font-size:12px;color:var(--text3);text-align:center;margin-top:8px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
 /* 접수등록 모달 개선 */
@@ -241,18 +232,6 @@ input,select,textarea{font-family:inherit}
 /* 입력 필드 호버 효과 */
 .form-input:hover,.form-select:hover,.form-textarea:hover{border-color:var(--blue)}
 .form-input::placeholder,.form-textarea::placeholder{color:var(--text3);font-size:13px}
-
-/* 사진 업로드 */
-.photo-upload-area{margin-top:8px}
-.photo-drop-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)}
-.photo-drop-zone:hover{border-color:var(--blue);background:var(--blue-l)}
-.photo-drop-zone.dragover{border-color:var(--blue);background:var(--blue-l)}
-.photo-preview-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
-.photo-preview-item{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--surface2)}
-.photo-preview-item img{width:100%;height:100%;object-fit:cover}
-.photo-preview-item .photo-delete{position:absolute;top:4px;right:4px;width:24px;height:24px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
-.photo-preview-item .photo-view{position:absolute;bottom:4px;right:4px;width:24px;height:24px;background:rgba(37,99,235,0.9);color:#fff;border:none;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
-.photo-count{text-align:center;font-size:12px;color:var(--text3);margin-top:8px}
 
 /* 모달 최대 너비 */
 #registerModal .modal{max-width:680px}
@@ -437,7 +416,7 @@ input,select,textarea{font-family:inherit}
 <select id="clinicFilter" class="topbar-filter" onchange="renderTable()" style="display:none">
 <option value="all">전체 치과</option>
 </select>
-<button class="btn btn-secondary btn-sm" onclick="clearPhotos(); openModal('registerModal')" id="topAddBtn">+ 접수 등록</button>
+<button class="btn btn-secondary btn-sm" onclick="clearPhotos();openModal('registerModal')" id="topAddBtn">+ 접수 등록</button>
 </div>
 </div>
 
@@ -893,30 +872,17 @@ VM|<input type="date" id="salesEndDate" class="form-input" style="width:140px;" 
   </div>
  </div>
 
-</div>
-
  <!-- 사진 섹션 -->
  <div class="form-section">
-  <div class="form-section-title">
-   <span class="section-icon">📷</span> 사진 (최대 5장)
+  <div class="form-section-title"><span class="section-icon">📷</span> 사진 (최대 5장)</div>
+  <div class="photo-drop-zone" id="photoDropZone" style="border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;background:var(--surface2)">
+   <span style="font-size:32px;">📷</span><p>사진을 드래그하거나 클릭하여 업로드</p>
+   <p style="font-size:12px;color:var(--text3)">최대 5장, JPG/PNG만 가능</p>
   </div>
-  <div class="photo-upload-area" id="photoUploadArea">
-   <div class="photo-drop-zone" id="photoDropZone">
-    <span style="font-size:32px;">📷</span>
-    <p>사진을 드래그하거나 클릭하여 업로드</p>
-    <p style="font-size:12px;color:var(--text3)">최대 5장, JPG/PNG만 가능</p>
-   </div>
-   <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
-   <div class="photo-preview-grid" id="photoPreviewGrid"></div>
-  </div>
-</div>
+  <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
+  <div class="photo-preview-grid" id="photoPreviewGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px"></div>
+ </div>
 
-<div class="modal-footer">
-<button class="btn btn-secondary" onclick="closeModal('registerModal')">취소</button>
-<button class="btn btn-primary" id="quickSubmitBtn" onclick="submitQuickRegister()">
- <span class="btn-icon">✓</span> 등록
-</button>
-</div>
 </div>
  <div class="form-section">
   <div class="form-section-title">
@@ -2862,137 +2828,6 @@ function playSuccessSound() {
   } catch(e) {
     console.log('효과음 재생 실패:', e);
   }
-HY|}
-
-// ===== 사진 업로드 기능 =====
-let currentPhotos = [];
-let editingCaseId = null;
-
-function initPhotoUpload() {
-  const dropZone = document.getElementById('photoDropZone');
-  const photoInput = document.getElementById('photoInput');
-  
-  if(!dropZone || !photoInput) return;
-  
-  dropZone.addEventListener('click', () => photoInput.click());
-  photoInput.addEventListener('change', (e) => handlePhotoFiles(e.target.files));
-  
-  dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.classList.add('dragover');
-  });
-  
-  dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('dragover');
-  });
-  
-  dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('dragover');
-    handlePhotoFiles(e.dataTransfer.files);
-  });
-}
-
-function handlePhotoFiles(files) {
-  const maxPhotos = 5;
-  const remaining = maxPhotos - currentPhotos.length;
-  
-  if(remaining <= 0) {
-    toast('최대 5장까지 업로드 가능합니다');
-    return;
-  }
-  
-  const filesToProcess = Array.from(files).slice(0, remaining);
-  
-  filesToProcess.forEach(file => {
-    if(!file.type.startsWith('image/')) {
-      toast('이미지 파일만 업로드 가능합니다');
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      currentPhotos.push(e.target.result);
-      renderPhotoPreviews();
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-function renderPhotoPreviews() {
-  const grid = document.getElementById('photoPreviewGrid');
-  if(!grid) return;
-  
-  grid.innerHTML = currentPhotos.map((photo, idx) => `
-    <div class="photo-preview-item">
-      <img src="${photo}" alt="사진 ${idx + 1}">
-      <button class="photo-delete" onclick="deletePhoto(${idx})">✕</button>
-      <button class="photo-view" onclick="viewPhoto(${idx})">🔍</button>
-    </div>
-  `).join('');
-  
-  let countEl = document.getElementById('photoCount');
-  if(!countEl) {
-    countEl = document.createElement('div');
-    countEl.id = 'photoCount';
-    countEl.className = 'photo-count';
-    grid.parentNode.appendChild(countEl);
-  }
-  countEl.textContent = `(${currentPhotos.length}/5)`;
-}
-
-function deletePhoto(idx) {
-  currentPhotos.splice(idx, 1);
-  renderPhotoPreviews();
-}
-
-function viewPhoto(idx) {
-  showPhotoModal(currentPhotos[idx], idx);
-}
-
-function showPhotoModal(photo, idx) {
-  const modal = document.createElement('div');
-  modal.className = 'modal-bg';
-  modal.id = 'photoModal';
-  modal.style.cssText = 'z-index:2000;display:flex;align-items:center;justify-content:center;';
-  modal.onclick = (e) => { if(e.target === modal) closeModal('photoModal'); };
-  
-  modal.innerHTML = `
-    <div class="modal" style="max-width:90vw;max-height:90vh;background:transparent;box-shadow:none;">
-      <div style="position:relative;">
-        <button onclick="closeModal('photoModal')" style="position:absolute;top:-40px;right:0;background:none;border:none;color:#fff;font-size:24px;cursor:pointer;">✕</button>
-        <img src="${photo}" style="max-width:90vw;max-height:85vh;object-fit:contain;border-radius:8px;">
-        <div style="display:flex;justify-content:center;gap:12px;margin-top:12px;">
-          <button class="btn btn-primary" onclick="downloadPhoto(${idx})">📥 다운로드</button>
-          <button class="btn btn-secondary" onclick="closeModal('photoModal'); showPhotoModal(currentPhotos[${idx > 0 ? idx - 1 : currentPhotos.length - 1}], ${idx > 0 ? idx - 1 : currentPhotos.length - 1})">◀ 이전</button>
-          <button class="btn btn-secondary" onclick="closeModal('photoModal'); showPhotoModal(currentPhotos[${idx < currentPhotos.length - 1 ? idx + 1 : 0}], ${idx < currentPhotos.length - 1 ? idx + 1 : 0})">다음 ▶</button>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  document.body.appendChild(modal);
-  setTimeout(() => modal.style.display = 'flex', 10);
-}
-
-function downloadPhoto(idx) {
-  const photo = currentPhotos[idx];
-  const link = document.createElement('a');
-  link.href = photo;
-  link.download = `iroom_photo_${Date.now()}.jpg`;
-  link.click();
-  toast('📥 사진 다운로드 완료');
-}
-
-function clearPhotos() {
-  currentPhotos = [];
-  renderPhotoPreviews();
-}
-
-function loadCasePhotos(caseData) {
-  currentPhotos = caseData.photos || [];
-  editingCaseId = caseData.id;
-  renderPhotoPreviews();
 }
 
 async function submitQuickRegister() {
@@ -3339,6 +3174,35 @@ function toast(msg) {
   setTimeout(() => el.remove(), 3000);
 }
 
+// 사진 업로드 기능
+let currentPhotos = [];
+function initPhotoUpload() {
+  const dz = document.getElementById('photoDropZone');
+  const pi = document.getElementById('photoInput');
+  if(!dz || !pi) return;
+  dz.onclick = () => pi.click();
+  pi.onchange = (e) => handlePhotoFiles(e.target.files);
+  dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('dragover'); };
+  dz.ondragleave = () => dz.classList.remove('dragover');
+  dz.ondrop = (e) => { e.preventDefault(); dz.classList.remove('dragover'); handlePhotoFiles(e.dataTransfer.files); };
+}
+function handlePhotoFiles(files) {
+  const max = 5;
+  if(currentPhotos.length >= max) { toast('최대 5장'); return; }
+  Array.from(files).slice(0, max - currentPhotos.length).forEach(f => {
+    if(!f.type.startsWith('image/')) return;
+    const r = new FileReader();
+    r.onload = (e) => { currentPhotos.push(e.target.result); renderPhotoPreviews(); };
+    r.readAsDataURL(f);
+  });
+}
+function renderPhotoPreviews() {
+  const g = document.getElementById('photoPreviewGrid');
+  if(!g) return;
+  g.innerHTML = currentPhotos.map((p, i) => `<div style="position:relative"><img src="${p}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px"><button onclick="currentPhotos.splice(${i},1);renderPhotoPreviews()" style="position:absolute;top:4px;right:4px;width:20px;height:20px;background:#000;color:#fff;border:none;border-radius:50%;cursor:pointer">×</button></div>`).join('');
+}
+function clearPhotos() { currentPhotos = []; renderPhotoPreviews(); }
+
 // 초기화
 loadData();
 loadArchives();
@@ -3347,12 +3211,11 @@ initPhotoUpload();
 </script>
 </body>
 </html>
+</script>
+</body>
+</html>
 
 // 초기화
-loadData();
-loadArchives();
-updateArchivePeriodInfo();
-initPhotoUpload();
 loadData();
 loadArchives();
 updateArchivePeriodInfo();
