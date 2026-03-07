@@ -909,7 +909,15 @@ VM|<input type="date" id="salesEndDate" class="form-input" style="width:140px;" 
    <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
    <div class="photo-preview-grid" id="photoPreviewGrid"></div>
   </div>
- </div>
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('registerModal')">취소</button>
+<button class="btn btn-primary" id="quickSubmitBtn" onclick="submitQuickRegister()">
+ <span class="btn-icon">✓</span> 등록
+</button>
+</div>
+</div>
  <div class="form-section">
   <div class="form-section-title">
    <span class="section-icon">📝</span> 특이사항
