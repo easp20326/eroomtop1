@@ -2419,6 +2419,7 @@ async function submitClinic() {
     renderClinics();
     updateClinicFilter();
     populateSelects();
+    updateSidebarClinicSelect();
     toast('✅ 거래처 추가 완료');
   } catch(e) {
     // 실패 시 추가한 항목 롤백
