@@ -1,0 +1,3755 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이룸덴탈랩 포털</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#f0f2f7;--surface:#fff;--surface2:#f8f9fc;--border:#e2e5ee;--text:#1a1d2e;--text2:#5a6075;--text3:#9ba3bb;--blue:#2563eb;--blue-l:#eff4ff;--blue-d:#1d4ed8;--green:#16a34a;--green-l:#f0fdf4;--yellow:#d97706;--yellow-l:#fffbeb;--red:#dc2626;--red-l:#fff1f1;--navy:#0f172a;--radius:12px;--radius-sm:7px;--shadow:0 1px 4px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.05);--shadow-lg:0 8px 32px rgba(0,0,0,.12)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
+
+/* ═══════════════════════════════════
+   로그인 화면
+ ═════════════════════════════════ */
+.login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0f172a 100%);display:flex;align-items:center;justify-content:center;z-index:1000;overflow:hidden}
+.login-bg-shapes{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.login-bg-shapes::before,.login-bg-shapes::after{content:'';position:absolute;border-radius:50%;animation:float 20s infinite ease-in-out}
+.login-bg-shapes::before{width:400px;height:400px;background:radial-gradient(circle,rgba(37,99,235,0.15) 0%,transparent 70%);top:-100px;right:-100px}
+.login-bg-shapes::after{width:300px;height:300px;background:radial-gradient(circle,rgba(22,163,74,0.1) 0%,transparent 70%);bottom:-50px;left:-50px;animation-delay:-10s}
+.login-shape{position:absolute;font-size:24px;opacity:0.08;animation:floatShape 15s infinite ease-in-out}
+.login-shape:nth-child(1){top:20%;left:10%;animation-delay:0s}
+.login-shape:nth-child(2){top:60%;left:5%;animation-delay:-5s}
+.login-shape:nth-child(3){top:30%;right:10%;animation-delay:-3s}
+.login-shape:nth-child(4){top:70%;right:15%;animation-delay:-7s}
+.login-shape:nth-child(5){top:45%;left:20%;animation-delay:-2s}
+@keyframes float{0%,100%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(30px,-30px) rotate(5deg)}}
+@keyframes floatShape{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-20px) rotate(10deg)}}
+.login-box{background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);border-radius:24px;padding:48px 40px;width:100%;max-width:420px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25),0 0 0 1px rgba(255,255,255,0.1);text-align:center;position:relative;animation:slideUp 0.6s ease-out}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.login-brand{width:120px;height:120px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 10px 30px rgba(37,99,235,0.3)}
+.login-brand-icon{font-size:48px}
+.login-logo-img{max-width:100px;max-height:100px;border-radius:16px;object-fit:contain;}
+.login-logo{font-size:42px;margin-bottom:8px}
+.login-title{font-size:26px;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,#0f172a,#1e293b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.login-sub{font-size:14px;color:var(--text3);margin-bottom:32px;font-weight:500}
+.login-form{text-align:left}
+.form-group{margin-bottom:20px;position:relative}
+.form-group label{display:block;font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px}
+.form-group .input-icon{position:absolute;left:14px;top:38px;font-size:16px;color:var(--text3);z-index:1}
+.form-group input{width:100%;padding:14px 14px 14px 44px;border:2px solid var(--border);border-radius:12px;font-size:14px;transition:all .2s;background:var(--surface)}
+.form-group input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px rgba(37,99,235,0.1)}
+.form-group input::placeholder{color:var(--text3)}
+.login-btn{width:100%;padding:16px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;transition:all .2s;margin-top:8px;position:relative;overflow:hidden}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(37,99,235,0.4)}
+.login-btn:active{transform:translateY(0)}
+.login-btn.loading{pointer-events:none}
+.login-btn.loading::after{content:'';position:absolute;width:20px;height:20px;border:2px solid transparent;border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;left:50%;top:50%;transform:translate(-50%,-50%)}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.login-links{display:flex;justify-content:center;gap:16px;margin-top:24px;font-size:13px;padding-top:20px;border-top:1px solid var(--border)}
+.login-links a{color:var(--text2);text-decoration:none;font-weight:500;transition:color .15s}
+.login-links a:hover{color:var(--blue)}
+.login-error{background:linear-gradient(135deg,#fef2f2,#fee2e2);color:#dc2626;padding:14px 16px;border-radius:12px;font-size:13px;margin-bottom:20px;display:none;border:1px solid #fecaca;animation:shake 0.4s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:-5px}75%{transform:5px}}
+.login-error.show{display:block}
+.login-footer{position:absolute;bottom:20px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.4);font-size:12px}
+
+/* ═══════════════════════════════════
+   메인 레이아웃
+═════════════════════════════════ */
+.app{min-height:100vh;display:none}
+.app.logged-in{display:flex}
+.sidebar{width:230px;background:var(--navy);flex-shrink:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.sidebar-logo{padding:24px 20px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sidebar-logo .logo-title{color:#fff;font-size:16px;font-weight:800;letter-spacing:-.3px}
+.sidebar-logo .logo-sub{color:rgba(255,255,255,.4);font-size:11px;margin-top:2px}
+.sidebar-nav{flex:1;padding:12px 0}
+.nav-section{padding:14px 16px 6px;font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:1px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;color:rgba(255,255,255,.6);font-size:13px;font-weight:500;cursor:pointer;border-radius:0;transition:all .15s;text-decoration:none;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9)}
+.nav-item.active{background:rgba(37,99,235,.25);color:#93b4ff;border-right:3px solid #2563eb}
+.nav-item .icon{font-size:16px;width:20px;text-align:center}
+.nav-item .badge{margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px}
+.sidebar-footer{padding:16px;border-top:1px solid rgba(255,255,255,.07)}
+.logout-btn{width:100%;padding:10px;border-radius:7px;border:none;background:rgba(239,68,68,.2);color:#fca5a5;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.logout-btn:hover{background:rgba(239,68,68,.3);color:#fff}
+.main{margin-left:230px;flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:16px;font-weight:700;color:var(--text);}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-user{padding:5px 14px;border-radius:999px;font-size:12px;font-weight:700;background:var(--blue-l);color:var(--blue)}
+.topbar-user.admin{background:var(--yellow-l);color:var(--yellow)}
+.topbar-filter{display:flex;align-items:center;gap:8px}
+.topbar-filter select{padding:6px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface)}
+.content{padding:24px 28px}
+
+/* ═══════════════════════════════════
+   공통 컴포넌트
+═════════════════════════════════ */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;text-decoration:none;white-space:nowrap}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:var(--blue-d)}
+.btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--border);color:var(--text)}
+.btn-danger{background:var(--red-l);color:var(--red);border:1px solid #fecaca}
+.btn-danger:hover{background:#fecaca}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-ghost{background:none;border:none;color:var(--text3);padding:5px 8px}
+.btn-ghost:hover{color:var(--text);background:var(--surface2)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card-title{font-size:14px;font-weight:700;color:var(--text)}
+.card-body{padding:20px}
+
+/* 상태 배지 */
+.status{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700;border:1.5px solid}
+.status::before{content:'';width:6px;height:6px;border-radius:50%}
+.status-working{border-color:#fbbf24;background:#fffbeb;color:#92400e}
+.status-working::before{background:#f59e0b}
+.status-design{border-color:#a78bfa;background:#f5f3ff;color:#5b21b6}
+.status-design::before{background:#8b5cf6}
+.status-manufacturing{border-color:#fdba74;background:#fff7ed;color:#c2410c}
+.status-manufacturing::before{background:#ea580c}
+.status-ship{border-color:#60a5fa;background:var(--blue-l);color:#1e40af;animation:pulse-ship 1.5s ease-in-out infinite}
+.status-ship::before{background:#2563eb;animation:pulse-dot 1.5s ease-in-out infinite}
+.status-done{border-color:#86efac;background:var(--green-l);color:#166534}
+.status-done::before{background:#16a34a}
+@keyframes pulse-ship{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.2)}50%{box-shadow:0 0 0 5px rgba(37,99,235,0)}}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* 히어로 */
+.hero-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
+.hero-stat{border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:4px;position:relative;overflow:hidden}
+.hero-stat::after{content:'';position:absolute;right:-10px;top:-10px;width:70px;height:70px;border-radius:50%;opacity:.12}
+.hs-working{background:#fffbeb;border:1.5px solid #fde68a}
+.hs-working::after{background:#f59e0b}
+.hs-design{background:#f5f3ff;border:1.5px solid #c4b5fd}
+.hs-design::after{background:#8b5cf6}
+.hs-manufacturing{background:#fff7ed;border:1.5px solid #fdba74}
+.hs-manufacturing::after{background:#ea580c}
+.hs-ship{background:var(--blue-l);border:1.5px solid #93c5fd}
+.hs-ship::after{background:#2563eb}
+.hs-done{background:var(--green-l);border:1.5px solid #86efac}
+.hs-done::after{background:#16a34a}
+.hero-num{font-size:36px;font-weight:800;font-family:'DM Mono',monospace;line-height:1}
+.hs-working .hero-num{color:#d97706}
+.hs-design .hero-num{color:#7c3aed}
+.hs-manufacturing .hero-num{color:#ea580c}
+.hs-ship .hero-num{color:#1d4ed8}
+.hs-done .hero-num{color:#15803d}
+.hero-label{font-size:12px;font-weight:700;color:var(--text2)}
+.hero-sub{font-size:11px;color:var(--text3)}
+.price-num{font-size:14px;color:var(--green);font-weight:700}
+
+/* 필터 */
+.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.filter-tab{padding:7px 16px;border-radius:999px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.filter-tab .status-count{background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;margin-left:4px;}
+.filter-tab:hover{border-color:var(--blue);color:var(--blue)}
+.filter-tab.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.filter-search{margin-left:auto;position:relative}
+.filter-search input{padding:8px 12px 8px 34px;border:1.5px solid var(--border);border-radius:999px;font-size:13px;width:220px;background:var(--surface);transition:border-color .15s}
+.filter-search input:focus{outline:none;border-color:var(--blue)}
+.filter-search::before{content:'🔍';position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px}
+.filter-clinic-select{padding:7px 12px;border-radius:999px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;min-width:150px}
+.filter-clinic-select:focus{outline:none;border-color:var(--blue)}
+.sidebar-clinic-select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-size:13px;font-weight:500;cursor:pointer;margin-bottom:10px;-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.sidebar-clinic-select:focus{outline:none;border-color:var(--blue)}
+.sidebar-clinic-select option{background:#1e293b;color:#fff;padding:12px;font-size:13px}
+
+/* 테이블 */
+.case-table{width:100%;border-collapse:collapse}
+.case-table thead th{background:var(--surface2);padding:11px 14px;font-size:12px;font-weight:700;color:var(--text2);text-align:left;border-bottom:2px solid var(--border);white-space:nowrap}
+.case-table thead th:nth-child(4),.case-table thead th:nth-child(6),.case-table thead th:nth-child(8),.case-table thead th:nth-child(9){text-align:center}
+.case-table td:nth-child(4),.case-table td:nth-child(6),.case-table td:nth-child(8),.case-table td:nth-child(9){text-align:center}
+.case-table thead th:first-child{border-radius:var(--radius-sm) 0 0 0}
+.case-table thead th:last-child{border-radius:0 var(--radius-sm) 0 0}
+.case-table tbody tr{transition:background .12s}
+.case-table tbody tr:hover{background:#f4f6fc}
+.case-table td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);vertical-align:middle}
+.case-table .patient-name{font-weight:700;color:var(--text)}
+.case-table .clinic-name{font-size:12px;color:var(--text2)}
+.case-table .tooth-num{font-family:'DM Mono',monospace;font-size:13px;font-weight:600;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:2px 8px;display:inline-block}
+.case-table .has-file{color:var(--blue);font-size:12px;display:inline-flex;align-items:center;gap:3px}
+.case-table .comment-count{background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;color:var(--text2)}
+.row-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.case-table tbody tr:hover .row-actions{opacity:1}
+
+/* 패널 */
+.panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:200;opacity:0;pointer-events:none;transition:opacity .25s}
+.panel-overlay.open{opacity:1;pointer-events:all}
+.detail-panel{position:fixed;top:0;right:-540px;width:540px;max-width:95vw;bottom:0;background:var(--surface);z-index:201;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);transition:right .3s cubic-bezier(.4,0,.2,1)}
+.detail-panel.open{right:0}
+.panel-header{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.panel-body{flex:1;overflow-y:auto;padding:20px}
+.panel-section{margin-bottom:22px}
+.panel-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:10px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.info-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px}
+.info-label{font-size:11px;color:var(--text3);font-weight:600;margin-bottom:3px}
+.info-value{font-size:14px;font-weight:600;color:var(--text)}
+
+/* 모달 */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;padding:20px}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:16px;box-shadow:var(--shadow-lg);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;transform:translateY(20px);transition:transform .25s}
+.modal-bg.open .modal{transform:translateY(0)}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:16px;font-weight:700}
+.modal-body{padding:20px 24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+.form-row{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px;display:block}
+.form-label .req{color:var(--red)}
+.form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;transition:border-color .15s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--blue)}
+.form-textarea{min-height:80px;resize:vertical}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* 접수등록 모달 개선 */
+.form-section{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.form-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.form-section-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:6px;padding-bottom:8px;border-bottom:1px dashed var(--border)}
+.section-icon{font-size:14px}
+.form-section .form-grid{margin-top:0}
+.form-section .form-row{margin-bottom:12px}
+.label-icon{font-size:12px;margin-right:2px}
+.title-icon{font-size:18px;margin-right:6px}
+.input-with-btn{display:flex;gap:8px}
+.input-with-btn .form-input{flex:1}
+.radio-group{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-top:4px}
+.radio-label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;padding:6px 12px;border-radius:var(--radius-sm);transition:background .15s}
+.radio-label:hover{background:var(--hover)}
+.radio-label input[type="radio"]{margin:0}
+.radio-label input[type="checkbox"]{width:16px;height:16px;margin:0}
+.radio-label.remake{background:#fff5f5;border:1px solid var(--red);color:var(--red);font-weight:600}
+.radio-label.remake:hover{background:#fff0f0}
+.remake-text{font-weight:600}
+.checkbox-icon{font-size:12px}
+.btn-icon{margin-right:4px}
+
+/* 입력 필드 호버 효과 */
+.form-input:hover,.form-select:hover,.form-textarea:hover{border-color:var(--blue)}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--text3);font-size:13px}
+
+/* 모달 최대 너비 */
+#registerModal .modal{max-width:680px}
+
+/* 토스트 */
+#toast{position:fixed;bottom:28px;right:28px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast-item{background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);animation:toastIn .3s ease;display:flex;align-items:center;gap:8px}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-50%) scale(0.8)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.period-btn.active{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(59,130,246,0.3)}
+
+/* 통계 페이지 개선 */
+.stat-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;text-align:center;transition:transform .2s,box-shadow .2s;position:relative;overflow:hidden}
+.stat-item::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blue),var(--navy))}
+.stat-item:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.stat-item .num{font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--blue),var(--navy));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-family:'DM Mono',monospace}
+.stat-item .label{font-size:12px;color:var(--text3);margin-top:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stat-item .icon{font-size:28px;margin-bottom:8px;display:block}
+.stat-item.sales{background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(5,150,105,0.05));border-color:rgba(16,185,129,0.3)}
+.stat-item.sales::before{background:linear-gradient(90deg,#10b981,#059669)}
+.stat-item.sales .num{background:linear-gradient(135deg,#10b981,#059669);-webkit-background-clip:text;background-clip:text}
+.stat-item.done{background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(22,163,74,0.05));border-color:rgba(34,197,94,0.3)}
+.stat-item.done::before{background:linear-gradient(90deg,#22c55e,#16a34a)}
+.stat-item.done .num{background:linear-gradient(135deg,#22c55e,#16a34a);-webkit-background-clip:text;background-clip:text}
+.stat-item.avg{background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(124,58,237,0.05));border-color:rgba(139,92,246,0.3)}
+.stat-item.avg::before{background:linear-gradient(90deg,#8b5cf6,#7c3aed)}
+.stat-item.avg .num{background:linear-gradient(135deg,#8b5cf6,#7c3aed);-webkit-background-clip:text;background-clip:text}
+
+.period-filter{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.period-btn{padding:8px 16px;border:1px solid var(--border);background:var(--surface);border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.period-btn:hover{border-color:var(--blue);color:var(--blue)}
+.period-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+.chart-card h3{font-size:14px;font-weight:700;margin-bottom:16px;color:var(--text);display:flex;align-items:center;gap:8px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.chart-container{position:relative;height:260px}
+
+/* 거래처 테이블 */
+.clinic-table{width:100%;border-collapse:collapse}
+.clinic-table th,.clinic-table td{padding:12px;border-bottom:1px solid var(--border);text-align:left}
+.clinic-table th{background:var(--surface2);font-size:12px;font-weight:700;color:var(--text2)}
+.clinic-table td{font-size:13px}
+.clinic-actions{display:flex;gap:4px}
+
+/* 보철 단가 */
+.prosthetic-item{display:flex;align-items:center;gap:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px}
+.prosthetic-item input{width:120px;padding:6px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;text-align:right}
+.prosthetic-name{flex:1;font-weight:600}
+.prosthetic-price{font-family:'DM Mono',monospace;color:var(--green);font-weight:700}
+
+/* 매출 분석 */
+.sales-table{width:100%;border-collapse:collapse;margin-top:16px}
+.sales-table th,.sales-table td{padding:12px 14px;border:1px solid var(--border);text-align:center}
+.sales-table th{background:var(--surface2);font-weight:700;font-size:12px}
+.sales-table td{font-size:13px}
+.sales-table .total-row{background:var(--blue-l);font-weight:700}
+.sales-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.sales-title{font-size:18px;font-weight:700}
+
+/* 설정 */
+.setting-item{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)}
+.setting-label{font-weight:600}
+.setting-desc{font-size:12px;color:var(--text3);margin-top:2px}
+.toggle{width:48px;height:26px;background:var(--border);border-radius:13px;position:relative;cursor:pointer;transition:background .2s}
+.toggle.active{background:var(--blue)}
+.toggle::after{content:'';position:absolute;width:22px;height:22px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform .2s}
+.toggle.active::after{transform:translateX(22px)}
+
+/* 치아 선택기 */
+.tooth-modal{max-width:520px}
+.tooth-section{text-align:center;margin-bottom:16px}
+.tooth-section-title{font-size:12px;font-weight:700;color:var(--text3);margin-bottom:8px}
+.tooth-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;max-width:360px;margin:0 auto}
+.tooth-btn{width:40px;height:40px;border-radius:8px;border:2px solid var(--border);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;color:var(--text)}
+.tooth-btn:hover{border-color:var(--blue);background:var(--blue-l)}
+.tooth-btn.selected{background:var(--blue);color:#fff;border-color:var(--blue)}
+.tooth-selected-list{margin-top:16px;padding:12px;background:var(--surface2);border-radius:var(--radius-sm);text-align:center}
+.tooth-selected-list span{font-weight:700;color:var(--blue)}
+
+/* 반응형 */
+@media(max-width:900px){.sidebar{width:200px}.main{margin-left:200px}.hero-stats{grid-template-columns:1fr 1fr}.content{padding:16px 18px}}
+@media(max-width:680px){.sidebar{display:none}.main{margin-left:0}.detail-panel{width:100%}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ 로그인 화면 ═══════════ -->
+<div class="login-screen" id="loginScreen">
+<div class="login-bg-shapes">
+<span class="login-shape">🦷</span>
+<span class="login-shape">🦷</span>
+<span class="login-shape">🦷</span>
+<span class="login-shape">🦷</span>
+<span class="login-shape">🦷</span>
+</div>
+<div class="login-box">
+<div class="login-brand">
+  <span class="login-brand-icon">🦷</span>
+</div>
+<div class="login-title">이룸덴탈랩</div>
+<div class="login-sub">치과기공소 관리 시스템</div>
+<div class="login-error" id="loginError">
+  <div id="errorMessage">아이디 또는 비밀번호가 올바르지 않습니다.</div>
+  <div id="attemptCount" style="display:none;margin-top:8px;font-size:12px;">
+    남은 시도 횟수: <span id="remainingAttempts">10</span>회
+  </div>
+</div>
+<form class="login-form" onsubmit="return handleLogin(event)" autocomplete="off">
+<div class="form-group">
+<label>아이디</label>
+<span class="input-icon">👤</span>
+<input type="text" id="loginIdField" name="loginIdField" placeholder="아이디를 입력하세요" autocomplete="off" required>
+</div>
+<div class="form-group">
+<label>비밀번호</label>
+<span class="input-icon">🔒</span>
+<input type="password" id="loginPwField" name="loginPwField" placeholder="비밀번호를 입력하세요" autocomplete="off" required>
+<span toggle-password style="position:absolute;right:12px;top:38px;cursor:pointer;font-size:16px;z-index:2;" onclick="togglePasswordVisibility('loginPwField', this)">👁️</span>
+</div>
+<button type="submit" class="login-btn" id="loginBtn">로그인</button>
+</form>
+<div class="login-links">
+<a href="#" onclick="showForgotPassword()">비밀번호 찾기</a>
+</div>
+</div>
+<div class="login-footer">© 2026 이룸덴탈랩. All rights reserved.</div>
+</div>
+
+<!-- ═══════════ 메인 앱 ═══════════ -->
+<div class="app" id="mainApp">
+<nav class="sidebar">
+<div class="sidebar-logo">
+<div class="logo-title">🦷 이룸덴탈랩</div>
+<div class="logo-sub">치과 기공소 포털</div>
+</div>
+<div id="sidebarClinicPanel" style="display:none;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.07);">
+<div style="color:rgba(255,255,255,.5);font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:8px;">🏢 거래처 이동 <span id="clinicCountBadge" style="margin-left:4px;background:rgba(37,99,235,.5);padding:2px 6px;border-radius:4px;font-size:9px;">0</span></div>
+<select id="sidebarClinicSelect" class="sidebar-clinic-select" onchange="jumpToClinic(this.value)">
+<option value="">거래처 선택...</option>
+</select>
+<button class="btn btn-secondary btn-sm" style="width:100%;background:rgba(255,255,255,.15);color:#fff;border:none;" onclick="showPage('clinics')">+ 거래처 추가</button>
+</div>
+<div class="sidebar-nav">
+<div class="nav-section">메뉴</div>
+<button class="nav-item active" onclick="showPage('list')">
+<span class="icon">📋</span> 진행현황
+<span class="badge" id="shipBadge">0</span>
+</button>
+<button class="nav-item" onclick="showPage('statistics')" id="menuStatistics">
+<span class="icon">📊</span> 통계 대시보드
+</button>
+<button class="nav-item" onclick="showPage('sales')" id="menuSales">
+<span class="icon">💰</span> 매출 분석
+</button>
+<button class="nav-item" onclick="showPage('archive')" id="menuArchive">
+<span class="icon">🗄️</span> 데이터 관리
+</button>
+<button class="nav-item" onclick="showPage('register')" id="menuRegister">
+<span class="icon">✏️</span> 접수 등록
+</button>
+<button class="nav-item" onclick="showPage('clinics')" id="menuClinics">
+<span class="icon">🏢</span> 거래처 관리
+</button>
+<button class="nav-item" onclick="showPage('prosthetics')" id="menuProsthetics">
+<span class="icon">🗂️</span> 보철 종류
+</button>
+<button class="nav-item" onclick="showPage('settings')" id="menuSettings">
+<span class="icon">⚙️</span> 설정
+</button>
+</div>
+<div class="sidebar-footer">
+<button class="logout-btn" onclick="logout()">🚪 로그아웃</button>
+</div>
+</nav>
+
+<div class="main">
+<div class="topbar">
+<div class="topbar-title" id="pageTitle">📋 진행현황</div>
+<div class="topbar-right">
+<div class="topbar-user" id="topbarUser"></div>
+<select id="clinicFilter" class="topbar-filter" onchange="renderTable()" style="display:none">
+<option value="all">전체 치과</option>
+</select>
+<button class="btn btn-secondary btn-sm" onclick="openModal('registerModal')" id="topAddBtn">+ 접수 등록</button>
+</div>
+</div>
+
+<!-- 진행현황 -->
+<div id="page-list" class="content">
+<div class="hero-stats">
+<div class="hero-stat hs-working">
+<div class="hero-num" id="cnt-working">0</div>
+<div class="hero-label">🟡 접수중</div>
+</div>
+<div class="hero-stat hs-design">
+<div class="hero-num" id="cnt-design">0</div>
+<div class="hero-label">🟣 디자인중</div>
+</div>
+<div class="hero-stat hs-manufacturing">
+<div class="hero-num" id="cnt-manufacturing">0</div>
+<div class="hero-label">🟠 제작중</div>
+</div>
+<div class="hero-stat hs-ship">
+<div class="hero-num" id="cnt-ship">0</div>
+<div class="hero-label">🔵 배송중</div>
+</div>
+<div class="hero-stat hs-done">
+<div class="hero-num" id="cnt-done">0</div>
+<div class="hero-label">🟢 완료됨</div>
+</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-tab active" onclick="filterAllClinics(this)" id="filter-all">🏢 모든 거래처</button>
+<button class="filter-tab" onclick="filterStatus('working',this)" id="filter-working">🟡 접수중 <span class="status-count" id="count-working">0</span></button>
+<button class="filter-tab" onclick="filterStatus('design',this)" id="filter-design">🟣 디자인중 <span class="status-count" id="count-design">0</span></button>
+<button class="filter-tab" onclick="filterStatus('manufacturing',this)" id="filter-manufacturing">🟠 제작중 <span class="status-count" id="count-manufacturing">0</span></button>
+<button class="filter-tab" onclick="filterStatus('ship',this)" id="filter-ship">🔵 배송중 <span class="status-count" id="count-ship">0</span></button>
+<button class="filter-tab" onclick="filterStatus('done',this)" id="filter-done">🟢 완료됨 <span class="status-count" id="count-done">0</span></button>
+<select id="listClinicFilter" class="filter-clinic-select" onchange="renderTable()" style="display:none">
+<option value="all">🏢 전체 거래처</option>
+</select>
+<div class="filter-search" style="display:flex;gap:8px;align-items:center;">
+  <select id="searchField" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;background:var(--surface);">
+    <option value="all">전체</option>
+    <option value="patient">환자명</option>
+    <option value="clinic">치과</option>
+    <option value="tooth">치아번호</option>
+    <option value="type">보철종류</option>
+    <option value="date">날짜</option>
+  </select>
+  <input type="text" id="searchInput" placeholder="검색어 입력..." oninput="searchCases(this.value)" style="padding:8px 12px 8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;width:180px;background:var(--surface);">
+  <input type="date" id="searchDateStart" onchange="searchCases(document.getElementById('searchInput').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;background:var(--surface);">
+  <span style="color:var(--text3)">~</span>
+  <input type="date" id="searchDateEnd" onchange="searchCases(document.getElementById('searchInput').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;background:var(--surface);">
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">접수 목록</span>
+</div>
+<div style="overflow-x:auto;">
+<table class="case-table">
+<thead>
+<tr>
+<th>접수일</th>
+<th>치과</th>
+<th>환자</th>
+<th>치식</th>
+<th>보철 종류</th>
+<th>구분</th>
+<th>단가</th>
+<th>상태</th>
+<th>출고일</th>
+<th>메모/사진</th>
+<th></th>
+</tr>
+</thead>
+<tbody id="caseTableBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+
+<!-- 통계 -->
+<div id="page-statistics" class="content" style="display:none;">
+<div class="period-filter">
+ <button class="period-btn" onclick="setPeriod('week',this)">📅 주간</button>
+ <button class="period-btn" onclick="setPeriod('month',this)">📆 이번달</button>
+ <button class="period-btn" onclick="setPeriod('quarter',this)">📊 분기</button>
+ <button class="period-btn" onclick="setPeriod('year',this)">🗓️ 연간</button>
+ <button class="period-btn active" onclick="setPeriod('all',this)">🌟 전체</button>
+</div>
+<div class="stat-summary">
+ <div class="stat-item"><span class="icon">📋</span><div class="num" id="statTotal">0</div><div class="label">총 케이스</div></div>
+ <div class="stat-item sales"><span class="icon">💰</span><div class="num" id="statSales">0</div><div class="label">총 매출</div></div>
+ <div class="stat-item done"><span class="icon">✅</span><div class="num" id="statDone">0</div><div class="label">완료</div></div>
+ <div class="stat-item avg"><span class="icon">📈</span><div class="num" id="statAvg">0</div><div class="label">평균 단가</div></div>
+</div>
+<div class="stat-charts">
+<div class="chart-card">
+<h3>상태별 분포</h3>
+<div class="chart-container"><canvas id="statusChart"></canvas></div>
+</div>
+<div class="chart-card">
+<h3>치과별 케이스</h3>
+<div class="chart-container"><canvas id="clinicChart"></canvas></div>
+</div>
+</div>
+
+<!-- 추가 통계 카드 -->
+<div class="stat-charts" style="margin-top:16px;">
+<div class="chart-card">
+<h3>🦷 보철별 통계</h3>
+<div id="prostheticStats" style="padding:10px;font-size:13px;"></div>
+</div>
+<div class="chart-card">
+<h3>🔄 리메이크율</h3>
+<div id="remakeStats" style="padding:10px;font-size:13px;"></div>
+</div>
+</div>
+
+<!-- 작업 관리 -->
+<div style="margin-top:16px;">
+<h3 style="font-size:15px;font-weight:700;margin-bottom:12px;">⚡ 작업 관리</h3>
+<div class="stat-charts">
+<div class="chart-card">
+<h3>🚨 급한 작업 (출고 임박)</h3>
+<div id="urgentTasks" style="padding:10px;font-size:13px;color:var(--red);"></div>
+</div>
+<div class="chart-card">
+<h3>📅 오늘의 일정 (출고예정)</h3>
+<div id="todayTasks" style="padding:10px;font-size:13px;"></div>
+</div>
+<div class="chart-card">
+<h3>✅ 최근 완료</h3>
+<div id="recentDone" style="padding:10px;font-size:13px;"></div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- 매출 분석 -->
+<div id="page-sales" class="content" style="display:none;">
+<div class="sales-header">
+<div class="sales-title">💰 매출 분석</div>
+</div>
+
+<div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+<div style="display:flex;gap:8px;align-items:center;">
+<label style="font-size:13px;font-weight:600;">기간:</label>
+<input type="date" id="salesStartDate" class="form-input" style="width:140px;" onchange="renderSales()">
+<span style="color:var(--text3);">~</span>
+~<input type="date" id="salesEndDate" class="form-input" style="width:140px;" onchange="renderSales()">
+<select id="salesMonth" style="display:none;">
+  <option value="">전체</option>
+</select>
+</div>
+<button class="btn btn-secondary btn-sm" onclick="setThisMonth()">이번달</button>
+<button class="btn btn-secondary btn-sm" onclick="setLast3Months()">최근 3개월</button>
+<button class="btn btn-primary" onclick="exportExcel()">📊 엑셀 내보내기</button>
+</div>
+
+<div class="stat-summary" id="salesSummary">
+<div class="stat-item"><div class="num" id="salesTotalCount">0</div><div class="label">총 건수</div></div>
+<div class="stat-item"><div class="num" id="salesTotalAmount">0</div><div class="label">총 매출</div></div>
+<div class="stat-item"><div class="num" id="salesAvgPrice">0</div><div class="label">평균 단가</div></div>
+<div class="stat-item"><div class="num" id="salesDoneCount">0</div><div class="label">완료 건수</div></div>
+</div>
+
+<div class="stat-charts">
+<div class="chart-card">
+<h3>📈 월별 추이</h3>
+<div class="chart-container"><canvas id="monthlyChart"></canvas></div>
+</div>
+<div class="chart-card">
+<h3>🏥 치과별 매출</h3>
+<div class="chart-container"><canvas id="clinicSalesChart"></canvas></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">📋 상세 내역</span>
+</div>
+<div class="card-body" id="salesContent">
+</div>
+</div>
+</div>
+
+<!-- 데이터 관리 (아카이브) -->
+<div id="page-archive" class="content" style="display:none;">
+<div class="card" style="max-width:800px;margin-bottom:20px;">
+<div class="card-header">
+<span class="card-title">📦 아카이브 생성</span>
+</div>
+<div class="card-body">
+<div class="form-grid" style="margin-bottom:16px;">
+<div class="form-row">
+<label class="form-label">기간 선택</label>
+<select class="form-select" id="archivePeriod" onchange="updateArchivePeriodInfo()">
+<option value="1">1개월</option>
+<option value="3">3개월</option>
+<option value="6">6개월</option>
+</select>
+</div>
+<div class="form-row">
+<label class="form-label">기준 월</label>
+<input type="date" id="archiveBaseDate" class="form-input" onchange="updateArchivePeriodInfo()">
+</div>
+</div>
+<div id="archivePeriodInfo" style="padding:12px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:16px;font-size:13px;">
+선택된 기간: 2026년 1월 (1개월)
+</div>
+<div style="display:flex;gap:8px;">
+<button class="btn btn-primary" onclick="createArchive()">📦 아카이브 생성 (원본 보존)</button>
+<button class="btn btn-danger" onclick="createArchiveAndDelete()">🗑️ 아카이브 생성 후 삭제</button>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<span class="card-title">📚 보관된 아카이브</span>
+</div>
+<div class="card-body" id="archiveList">
+<p style="color:var(--text3);text-align:center;padding:20px;">보관된 아카이브가 없습니다</p>
+</div>
+</div>
+</div>
+
+<!-- 아카이브 보기 모달 -->
+<div class="modal-bg" id="archiveViewModal">
+<div class="modal" style="max-width:900px;">
+<div class="modal-header">
+<div class="modal-title" id="archiveViewTitle">📂 아카이브 보기</div>
+<button class="btn btn-ghost" onclick="closeModal('archiveViewModal')">✕</button>
+</div>
+<div class="modal-body">
+<div style="display:flex;gap:8px;margin-bottom:16px;">
+<input type="text" id="archiveSearch" class="form-input" placeholder="환자명/차트번호/치아번호 검색..." oninput="filterArchiveView()">
+</div>
+<div style="max-height:400px;overflow-y:auto;">
+<table class="sales-table">
+<thead>
+<tr>
+<th>접수일</th>
+<th>치과</th>
+<th>환자</th>
+<th>차트번호</th>
+<th>치아</th>
+<th>보철</th>
+<th>구분</th>
+<th>수량</th>
+<th>매출</th>
+</tr>
+</thead>
+<tbody id="archiveViewBody">
+</tbody>
+</table>
+</div>
+</div>
+<div class="modal-footer">
+<div style="flex:1;font-size:13px;color:var(--text3);" id="archiveViewSummary"></div>
+<button class="btn btn-secondary" onclick="exportArchiveExcel()">📊 엑셀 내보내기</button>
+<button class="btn btn-secondary" onclick="mergeArchiveToCurrent()">🔄 현재 데이터에 병합</button>
+<button class="btn btn-primary" onclick="closeModal('archiveViewModal')">닫기</button>
+</div>
+</div>
+</div>
+
+<!-- 접수 등록 -->
+<div id="page-register" class="content" style="display:none;">
+<div class="card" style="max-width:620px;">
+<div class="card-header"><span class="card-title">✏️ 접수 등록</span></div>
+<div class="card-body">
+<div class="form-grid">
+<div class="form-row">
+<label class="form-label">치과명 <span class="req">*</span></label>
+<select class="form-select" id="reg-clinic"></select>
+</div>
+<div class="form-row">
+<label class="form-label">환자명 <span class="req">*</span></label>
+<input class="form-input" id="reg-patient" placeholder="환자명을 입력하세요">
+</div>
+<div class="form-row">
+<label class="form-label">치식 <span class="req">*</span> <button type="button" class="btn btn-ghost btn-sm" onclick="openToothSelector('reg-tooth')">🦷 클릭 선택</button></label>
+<input class="form-input" id="reg-tooth" placeholder="치식을 선택하세요" readonly onclick="openToothSelector('reg-tooth')">
+</div>
+<div class="form-row">
+<label class="form-label">보철 종류 <span class="req">*</span></label>
+<select class="form-select" id="reg-type"></select>
+</div>
+<div class="form-row">
+<label class="form-label">유형</label>
+<div style="display:flex;gap:16px;padding-top:4px;flex-wrap:wrap;">
+<label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="radio" name="reg-unitType" value="single" checked> 싱글</label>
+<label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="radio" name="reg-unitType" value="bridge"> 브릿지</label>
+<label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-left:12px;"><input type="checkbox" id="reg-isRemake" style="width:16px;height:16px;"> <span style="color:var(--red);font-weight:600;">🔄 리메이크</span></label>
+</div>
+</div>
+<div class="form-row">
+<label class="form-label">출고 예정일</label>
+<input class="form-input" type="date" id="reg-ship">
+</div>
+</div>
+<div class="form-row">
+<label class="form-label">메모</label>
+<textarea class="form-textarea" id="reg-memo"></textarea>
+</div>
+<div style="display:flex;gap:8px;margin-top:16px;">
+<button class="btn btn-primary" id="regSubmitBtn" onclick="submitRegister()">등록하기</button>
+<button class="btn btn-secondary" onclick="showPage('list')">취소</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- 거래처 관리 -->
+<div id="page-clinics" class="content" style="display:none;">
+<div class="card">
+<div class="card-header">
+<span class="card-title">🏢 거래처 관리</span>
+<button class="btn btn-secondary btn-sm" onclick="generateClinicPricePDF()">📄 단가표 PDF</button>
+<button class="btn btn-primary btn-sm" onclick="openModal('clinicModal')">+ 거래처 추가</button>
+</div>
+<div class="card-body" style="padding:0;">
+<table class="clinic-table">
+<thead>
+<tr>
+<th>거래처명</th>
+<th>사업자번호</th>
+<th>전화번호</th>
+<th>원장님</th>
+<th>이메일</th>
+<th>비밀번호</th>
+<th></th>
+</tr>
+</thead>
+<tbody id="clinicTableBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+
+<!-- 보철 종류 -->
+<div id="page-prosthetics" class="content" style="display:none;">
+<div class="card" style="max-width:600px;">
+<div class="card-header">
+<span class="card-title">🗂️ 보철 종류 및 단가</span>
+<button class="btn btn-primary btn-sm" onclick="addProsthetic()">+ 추가</button>
+</div>
+<div class="card-body" id="prostheticList">
+</div>
+</div>
+</div>
+
+<!-- 설정 -->
+<div id="page-settings" class="content" style="display:none;">
+<div class="card" style="max-width:600px;">
+<div class="card-header"><span class="card-title">⚙️ 설정</span></div>
+<div class="card-body">
+<div class="setting-item">
+<div>
+<div class="setting-label">가격 공개</div>
+<div class="setting-desc">치과에서도 가격을 볼 수 있습니다</div>
+</div>
+<div class="toggle" id="showPriceToggle" onclick="toggleShowPrice()"></div>
+</div>
+<div class="setting-item" id="pwChangeItem">
+<div>
+<div class="setting-label">비밀번호 변경</div>
+<div class="setting-desc">로그인 비밀번호를 변경합니다</div>
+</div>
+<button class="btn btn-secondary btn-sm" onclick="openModal('passwordModal')">변경</button>
+</div>
+<div class="setting-item">
+<div>
+<div class="setting-label">로그인 시도 초기화</div>
+<div class="setting-desc">차단된 사용자의 로그인 시도 횟수를 초기화합니다 (현재: <span id="currentLoginAttempts">0</span>회)</div>
+</div>
+<button class="btn btn-secondary btn-sm" onclick="resetLoginAttempts()">초기화</button>
+</div>
+<div class="setting-item">
+<div>
+<div class="setting-label">데이터 백업</div>
+<div class="setting-desc">모든 데이터를 파일로 다운로드합니다</div>
+</div>
+<button class="btn btn-secondary btn-sm" onclick="backupData()">📥 백업</button>
+</div>
+<div class="setting-item">
+<div>
+<div class="setting-label">데이터 복원</div>
+<div class="setting-desc">백업 파일에서 데이터를 복원합니다</div>
+</div>
+<button class="btn btn-secondary btn-sm" onclick="document.getElementById('restoreFile').click()">📤 복원</button>
+<input type="file" id="restoreFile" accept=".json" style="display:none" onchange="restoreData(this)">
+</div>
+<div class="setting-item">
+<div>
+<div class="setting-label">데이터 최적화</div>
+<div class="setting-desc">중복 데이터를 정리하여 용량 절감</div>
+</div>
+<button class="btn btn-secondary btn-sm" onclick="optimizeData()">🧹 최적화</button>
+</div>
+
+</div>
+</div>
+<!-- ═══════════ 모달 ═══════════ -->
+<div class="modal-bg" id="registerModal">
+<div class="modal" style="max-width:720px;">
+<div class="modal-header">
+<div class="modal-title">
+ <span class="title-icon">📋</span> 빠른 접수
+</div>
+<button class="btn btn-ghost" onclick="closeModal('registerModal')">✕</button>
+</div>
+<div class="modal-body" style="max-height:70vh;overflow-y:auto;">
+ 
+ <!-- 기본정보 섹션 -->
+ <div class="form-section">
+  <div class="form-section-title">
+   <span class="section-icon">🏥</span> 기본정보
+  </div>
+  <div class="form-grid">
+   <div class="form-row">
+    <label class="form-label"><span class="label-icon">🏢</span> 치과명 <span class="req">*</span></label>
+    <select class="form-select" id="m-clinic"></select>
+   </div>
+   <div class="form-row">
+    <label class="form-label"><span class="label-icon">👤</span> 환자명 <span class="req">*</span></label>
+<input class="form-input" id="m-patient" placeholder=" 환자명을 입력하세요">
+   </div>
+  </div>
+ </div>
+
+ <!-- 치료정보 섹션 -->
+ <div class="form-section">
+  <div class="form-section-title">
+   <span class="section-icon">🦷</span> 치료정보
+  </div>
+  <div class="form-grid">
+   <div class="form-row">
+    <label class="form-label"><span class="label-icon">🔩</span> 치식 <span class="req">*</span></label>
+    <div class="input-with-btn">
+     <input class="form-input" id="m-tooth" readonly placeholder="치식을 선택하세요" onclick="openToothSelector('m-tooth')">
+     <button type="button" class="btn btn-outline btn-sm" onclick="openToothSelector('m-tooth')">🦷 선택</button>
+    </div>
+   </div>
+   <div class="form-row">
+    <label class="form-label"><span class="label-icon">🔧</span> 보철 종류 <span class="req">*</span></label>
+    <select class="form-select" id="m-type"></select>
+   </div>
+   <div class="form-row">
+    <label class="form-label"><span class="label-icon">📊</span> 유형</label>
+    <div class="radio-group">
+     <label class="radio-label"><input type="radio" name="m-unitType" value="single" checked> <span class="radio-icon">⬡</span> 싱글</label>
+     <label class="radio-label"><input type="radio" name="m-unitType" value="bridge"> <span class="radio-icon">🔗</span> 브릿지</label>
+     <label class="radio-label remake">
+      <input type="checkbox" id="m-isRemake"> <span class="checkbox-icon">🔄</span> <span class="remake-text">리메이크</span>
+     </label>
+    </div>
+   </div>
+  </div>
+ </div>
+
+ <!-- 일정 섹션 -->
+ <div class="form-section">
+  <div class="form-section-title">
+   <span class="section-icon">📅</span> 일정
+  </div>
+  <div class="form-grid">
+   <div class="form-row">
+    <label class="form-label"><span class="label-icon">🚚</span> 출고 예정일</label>
+    <input class="form-input" type="date" id="m-ship">
+   </div>
+  </div>
+ </div>
+
+ <!-- 메모 섹션 -->
+ <div class="form-section">
+  <div class="form-section-title">
+   <span class="section-icon">📝</span> 특이사항
+  </div>
+  <div class="form-row">
+   <textarea class="form-textarea" id="m-memo" placeholder="특이사항이 있으면 입력하세요"></textarea>
+  </div>
+ </div>
+
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('registerModal')">취소</button>
+<button class="btn btn-primary" id="quickSubmitBtn" onclick="submitQuickRegister()">
+ <span class="btn-icon">✓</span> 등록
+</button>
+</div>
+</div>
+</div>
+
+<!-- 거래처 추가 모달 -->
+<div class="modal-bg" id="clinicModal">
+<div class="modal" style="max-width:560px;">
+<div class="modal-header">
+<div class="modal-title"><span class="title-icon">🏢</span> 거래처 추가</div>
+<button class="btn btn-ghost" onclick="closeModal('clinicModal')">✕</button>
+</div>
+<div class="modal-body" style="max-height:70vh;overflow-y:auto;">
+ 
+ <div class="form-section">
+  <div class="form-section-title"><span class="section-icon">🏥</span> 기본정보</div>
+  <div class="form-grid">
+   <div class="form-row">
+    <label class="form-label"><span class="label-icon">🏢</span> 거래처명(치과명) <span class="req">*</span></label>
+    <input class="form-input" id="new-clinic-name" placeholder="거래처명을 입력하세요">
+   </div>
+   <div class="form-row">
+    <label class="form-label"><span class="label-icon">📋</span> 사업자등록번호 <span class="req">*</span></label>
+    <input class="form-input" id="new-clinic-biz" placeholder="사업자등록번호를 입력하세요">
+   </div>
+   <div class="form-row">
+    <label class="form-label"><span class="label-icon">📞</span> 전화번호</label>
+    <input class="form-input" id="new-clinic-phone" placeholder="전화번호를 입력하세요">
+   </div>
+   <div class="form-row">
+    <label class="form-label"><span class="label-icon">👨‍⚕️</span> 원장님 성함</label>
+    <input class="form-input" id="new-clinic-director" placeholder="원장님 성함을 입력하세요">
+   </div>
+   <div class="form-row">
+    <label class="form-label"><span class="label-icon">✉️</span> 이메일</label>
+    <input class="form-input" id="new-clinic-email" placeholder="이메일을 입력하세요" type="email">
+   </div>
+  </div>
+ </div>
+
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('clinicModal')">취소</button>
+<button class="btn btn-primary" onclick="submitClinic()"><span class="btn-icon">✓</span> 추가</button>
+</div>
+</div>
+</div>
+
+<!-- 비밀번호 변경 모달 -->
+<div class="modal-bg" id="passwordModal">
+<div class="modal" style="max-width:480px;">
+<div class="modal-header">
+<div class="modal-title"><span class="title-icon">🔐</span> 비밀번호 변경</div>
+<button class="btn btn-ghost" onclick="closeModal('passwordModal')">✕</button>
+</div>
+<div class="modal-body">
+ 
+ <div class="form-section">
+  <div class="form-section-title"><span class="section-icon">🔒</span> 비밀번호 변경</div>
+  <div class="form-row">
+   <label class="form-label"><span class="label-icon">🔑</span> 현재 비밀번호</label>
+   <input class="form-input" type="password" id="currentPw" placeholder="현재 비밀번호를 입력하세요">
+  </div>
+  <div class="form-row">
+   <label class="form-label"><span class="label-icon">✨</span> 새 비밀번호</label>
+   <input class="form-input" type="password" id="newPw" placeholder="새 비밀번호를 입력하세요">
+  </div>
+  <div class="form-row">
+   <label class="form-label"><span class="label-icon">✅</span> 새 비밀번호 확인</label>
+   <input class="form-input" type="password" id="confirmPw" placeholder="새 비밀번호를 다시 입력하세요">
+  </div>
+ </div>
+
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('passwordModal')">취소</button>
+<button class="btn btn-primary" onclick="changePassword()"><span class="btn-icon">✓</span> 변경</button>
+</div>
+</div>
+</div>
+
+<!-- 비밀번호 찾기 모달 -->
+<div class="modal-bg" id="forgotModal">
+<div class="modal" style="max-width:480px;">
+<div class="modal-header">
+<div class="modal-title"><span class="title-icon">🔍</span> 비밀번호 찾기</div>
+<button class="btn btn-ghost" onclick="closeModal('forgotModal')">✕</button>
+</div>
+<div class="modal-body">
+ 
+ <div class="form-section">
+  <div class="form-section-title"><span class="section-icon">🔎</span> 정보 입력</div>
+  <div class="form-row">
+   <label class="form-label"><span class="label-icon">🏢</span> 아이디 (거래처명)</label>
+   <input class="form-input" id="forgot-id" placeholder="거래처명을 입력하세요">
+  </div>
+  <div class="form-row">
+   <label class="form-label"><span class="label-icon">📋</span> 사업자등록번호</label>
+   <input class="form-input" id="forgot-biz" placeholder="사업자등록번호를 입력하세요">
+  </div>
+  <div class="form-row">
+   <label class="form-label"><span class="label-icon">✉️</span> 이메일</label>
+   <input class="form-input" id="forgot-email" placeholder="등록된 이메일을 입력하세요" type="email">
+  </div>
+ </div>
+
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('forgotModal')">취소</button>
+<button class="btn btn-primary" onclick="findPassword()"><span class="btn-icon">🔍</span> 비밀번호 찾기</button>
+</div>
+</div>
+</div>
+
+<!-- 거래처 정보 보기/수정 모달 -->
+<div class="modal-bg" id="clinicInfoModal">
+<div class="modal" style="max-width:600px;">
+<div class="modal-header">
+<div class="modal-title"><span class="title-icon">🏢</span> 거래처 정보</div>
+<button class="btn btn-ghost" onclick="closeModal('clinicInfoModal')">✕</button>
+</div>
+<div class="modal-body" id="clinicInfoContent" style="max-height:70vh;overflow-y:auto;">
+</div>
+</div>
+</div>
+
+<!-- 치아 선택 모달 -->
+<div class="modal-bg" id="toothModal">
+<div class="modal tooth-modal">
+<div class="modal-header">
+<div class="modal-title">🦷 치아 선택 (FDI)</div>
+<button class="btn btn-ghost" onclick="closeModal('toothModal')">✕</button>
+</div>
+<div class="modal-body">
+<div class="tooth-section">
+<div class="tooth-section-title">상악 (위)</div>
+<div class="tooth-grid" id="toothGridUpper"></div>
+</div>
+<div class="tooth-section">
+<div class="tooth-section-title">하악 (아래)</div>
+<div class="tooth-grid" id="toothGridLower"></div>
+</div>
+<div class="tooth-selected-list">
+선택된 치아: <span id="selectedTeethDisplay">없음</span>
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('toothModal')">취소</button>
+<button class="btn btn-primary" onclick="confirmToothSelection()">확인</button>
+</div>
+</div>
+</div>
+
+<input type="hidden" id="toothInputTarget">
+
+<div id="toast"></div>
+
+<script>
+/**
+ * 이룸덴탈랩 포털 - 메인 애플리케이션
+ * 
+ * [업그레이드 가이드]
+ * 
+ * 1. Supabase 업그레이드:
+ *    - cdn.jsdelivr.net/npm/@supabase/supabase-js@2 → 최신 버전으로 변경
+ *    - supabaseUrl, supabaseKey는 Vercel 환경변수로 관리 권장
+ * 
+ * 2. Chart.js 업그레이드:
+ *    - cdn.jsdelivr.net/npm/chart.js@4.4.1 → 최신 버전 확인
+ * 
+ * 3. XLSX (Excel) 업그레이드:
+ *    - cdn.jsdelivr.net/npm/xlsx@0.18.5 → 최신 버전 확인
+ * 
+ * 4. 로컬 → 서버 마이그레이션 시:
+ *    - loadData()의 Supabase 쿼리를 서버 API로 변경
+ *    - saveData()의 Supabase upsert를 서버 API로 변경
+ *    - API_BASE 상수 추가 후 모든 api* 함수 수정
+ * 
+ * 5. 실시간 기능 추가 시:
+ *    - Supabase Realtime 구독 추가 (supabaseClient.channel)
+ *    -_cases, _clinics 테이블 변경 사항 실시간 반영
+ */
+
+// Supabase 연결
+const supabaseUrl = 'https://zxaqrwzcmyhbfvyahwlc.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4YXFyd3pjbXloYmZ2eWFod2xjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTEwODksImV4cCI6MjA4NzQ2NzA4OX0.3x51KnmoOr5sb5XDU-ZheWLY55gNicPkNJxx3TJNsks';
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+// 보안: 비밀번호 해시화 (Web Crypto API)
+const SALT = 'iroom_salt_2026';
+
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + SALT);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function verifyPassword(password, hashedPassword) {
+  const hash = await hashPassword(password);
+  return hash === hashedPassword;
+}
+
+// Supabase Auth 세션 관리
+let supabaseSession = null;
+
+// 세션 복원 (페이지 로드 시)
+async function initAuth() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) {
+    supabaseSession = session;
+    await restoreUserFromSession(session);
+  }
+}
+
+// 세션에서 사용자 복원
+async function restoreUserFromSession(session) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+  
+  if (user.email === 'admin@iroom.com') {
+    currentUser = { type: 'admin', name: '이룸덴탈랩', email: user.email };
+  } else {
+    const clinic = clinics.find(c => c.email === user.email);
+    if (clinic) {
+      currentUser = { type: 'clinic', name: clinic.name, id: clinic.id, email: user.email, permissions: clinic.permissions };
+    }
+  }
+  
+  if (currentUser) {
+    localStorage.setItem('iroom_user', JSON.stringify(currentUser));
+    showMainApp();
+  }
+}
+
+// Auth 상태 변경 리스너
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    supabaseSession = session;
+    restoreUserFromSession(session);
+  } else if (event === 'SIGNED_OUT') {
+    supabaseSession = null;
+    currentUser = null;
+    localStorage.removeItem('iroom_user');
+  }
+});
+
+async function apiLogin(email, password) {
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+  
+  if (error) {
+    throw new Error(error.message || '로그인 실패');
+  }
+  
+  return { user: data.user, session: data.session };
+}
+
+// Supabase CRUD 함수들
+async function apiGetCases() { 
+  const { data, error } = await supabaseClient.from('cases').select('*');
+  if (error) throw error;
+  return data || [];
+}
+
+async function apiCreateCase(data) {
+  const { data: result, error } = await supabaseClient.from('cases').insert(data).select().single();
+  if (error) throw error;
+  return result;
+}
+
+async function apiUpdateCase(id, data) {
+  const { data: result, error } = await supabaseClient.from('cases').update(data).eq('id', id).select().single();
+  if (error) throw error;
+  return result;
+}
+
+async function apiDeleteCase(id) {
+  const { error } = await supabaseClient.from('cases').delete().eq('id', id);
+  if (error) throw error;
+  return { success: true };
+}
+
+async function apiGetClinics() { 
+  const { data, error } = await supabaseClient.from('clinics').select('*');
+  if (error) throw error;
+  return data || [];
+}
+
+async function apiCreateClinic(data) {
+  const { data: result, error } = await supabaseClient.from('clinics').insert(data).select().single();
+  if (error) throw error;
+  return result;
+}
+
+async function apiUpdateClinic(id, data) {
+  const { data: result, error } = await supabaseClient.from('clinics').update(data).eq('id', id).select().single();
+  if (error) throw error;
+  return result;
+}
+
+async function apiDeleteClinic(id) {
+  const { error } = await supabaseClient.from('clinics').delete().eq('id', id);
+  if (error) throw error;
+  return { success: true };
+}
+
+async function apiGetProsthetics() { 
+  const { data, error } = await supabaseClient.from('prosthetics').select('*');
+  if (error) throw error;
+  return data || [];
+}
+
+async function apiCreateProsthetic(data) {
+  const { data: result, error } = await supabaseClient.from('prosthetics').insert(data).select().single();
+  if (error) throw error;
+  return result;
+}
+
+async function apiUpdateProsthetic(id, data) {
+  const { data: result, error } = await supabaseClient.from('prosthetics').update(data).eq('id', id).select().single();
+  if (error) throw error;
+  return result;
+}
+
+async function apiDeleteProsthetic(id) {
+  const { error } = await supabaseClient.from('prosthetics').delete().eq('id', id);
+  if (error) throw error;
+  return { success: true };
+}
+
+async function apiGetSettings() { 
+  const { data, error } = await supabaseClient.from('settings').select('*');
+  if (error) throw error;
+  return data || [];
+}
+
+async function apiSaveSettings(data) {
+  for (const [key, value] of Object.entries(data)) {
+    await supabaseClient.from('settings').upsert({ key, value }, { onConflict: 'key' });
+  }
+  return { success: true };
+}
+
+async function apiUploadFile(file) {
+  // Supabase Storage 사용 ( buckets 필요)
+  const fileName = `${Date.now()}_${file.name}`;
+  const { data, error } = await supabaseClient.storage
+    .from('files')
+    .upload(fileName, file);
+  
+  if (error) {
+    throw new Error('파일 업로드 실패: ' + error.message);
+  }
+  
+  const { data: urlData } = supabaseClient.storage
+    .from('files')
+    .getPublicUrl(fileName);
+  
+  return { path: data.path, url: urlData.publicUrl };
+}
+
+// Auth 상태 변경 - Supabase 기반
+// 토큰이 있으면 유효한 것으로 간주 (서버측에서 검증)
+let currentUser = null;
+let currentFilter = 'all';
+let currentSearch = '';
+let currentPeriod = 'all';
+let statusChart = null;
+let clinicChart = null;
+
+// 로그인 시도 횟수
+let loginAttempts = parseInt(localStorage.getItem('iroom_loginAttempts') || '0');
+let isLoginBlocked = loginAttempts >= 10;
+
+// 환자 이름 익명화
+function maskPatientName(name) {
+  if(!name) return '';
+  if(name.length <= 2) return name[0] + '*';
+  return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+}
+
+// 표시용 환자 데이터 반환
+function getDisplayPatient(c) {
+  if(currentUser && currentUser.type === 'admin') {
+    return c.patientOriginal || c.patient || '';
+  }
+  return c.patient || maskPatientName(c.patientOriginal) || '';
+}
+
+let settings = {
+  showPriceToClinic: false,
+  adminPassword: '1234'
+};
+
+// 기본 관리자 비밀번호 (항상 이 값으로 검증)
+const ADMIN_ID = '이룸덴탈랩';
+const ADMIN_PW = 'jin7102__!!';
+
+// 기본 보철 단가 (개당 가격)
+let prosthetics = [
+  {name:'지르코니아',price:60000},
+  {name:'인레이',price:80000},
+  {name:'PMMA',price:50000},
+  {name:'플리퍼',price:70000},
+  {name:'이맥스 인레이',price:120000},
+  {name:'PFM 크라운',price:180000},
+  {name:'골드 크라운',price:200000},
+  ];
+let clinics = [
+  {id:1,name:'서울치과',businessNumber:'1234567890',phone:'02-1234-5678',director:'김원장',email:'seoul@dental.co.kr',password:'67890',priceAdjust:0},
+  {id:2,name:'부산치과',businessNumber:'2345678901',phone:'051-1234-5678',director:'이원장',email:'busan@dental.co.kr',password:'78901',priceAdjust:0},
+  {id:3,name:'대구치과',businessNumber:'3456789012',phone:'053-1234-5678',director:'박원장',email:'daegu@dental.co.kr',password:'89012',priceAdjust:0}
+];
+
+let cases = [];
+
+// 네트워크 상태 감지
+let isOnline = navigator.onLine;
+window.addEventListener('online', () => { isOnline = true; toast('🌐 네트워크 연결됨'); });
+window.addEventListener('offline', () => { isOnline = false; toast('⚠️ 네트워크 연결 끊김 - 로컬 모드'); });
+
+// localStorage에서 데이터 로드 함수
+function loadFromLocalStorage() {
+  // 거래처 데이터 로드
+  const savedClinics = localStorage.getItem('iroom_clinics');
+  if(savedClinics) {
+    clinics = JSON.parse(savedClinics);
+  }
+  
+  // 보철 데이터 로드
+  const savedProsthetics = localStorage.getItem('iroom_prosthetics');
+  if(savedProsthetics) {
+    prosthetics = JSON.parse(savedProsthetics);
+  }
+  
+  // 설정 로드
+  const savedSettings = localStorage.getItem('iroom_settings');
+  if(savedSettings) {
+    settings = JSON.parse(savedSettings);
+  }
+  
+  // 케이스 데이터 로드
+  const savedCases = localStorage.getItem('iroom_cases');
+  if(savedCases) {
+    cases = JSON.parse(savedCases);
+    cases.forEach(c => {
+      if(!c.unitType) c.unitType = 'single';
+      if(c.isRemake === undefined) c.isRemake = false;
+    });
+  }
+  
+  console.log('localStorage에서 데이터 로드 완료');
+}
+
+
+async function fetchWithRetry(fn, retries = 3) {
+  for(let i = 0; i < retries; i++) {
+    try {
+      const result = await fn();
+      if(!result.error) return result;
+    } catch(e) {
+      console.warn(`Attempt ${i+1} failed:`, e);
+    }
+    if(i < retries - 1) await new Promise(r => setTimeout(r, 1000));
+  }
+  return { error: true, data: null };
+}
+
+// ═══════════════════════════════════
+// Supabase 데이터 로드
+// ═══════════════════════════════════
+async function loadData(clinicName = null) {
+  try {
+    // 거래처 로그인 시 자기 데이터만 필터링
+    let casesQuery = supabaseClient.from('cases').select('*');
+    if (clinicName) {
+      casesQuery = casesQuery.eq('clinic', clinicName);
+    }
+    const casesRes = await casesQuery;
+    
+    const clinicsRes = await supabaseClient.from('clinics').select('*');
+    const prostheticsRes = await supabaseClient.from('prosthetics').select('*');
+    const settingsRes = await supabaseClient.from('settings').select('*');
+
+    if(casesRes.error || clinicsRes.error || prostheticsRes.error) {
+      console.warn('Supabase 일부 로드 실패, localStorage 사용');
+      loadFromLocalStorage();
+      toast('⚠️ 서버 연결 실패 - 로컬 데이터 사용');
+      return;
+    }
+
+    if (casesRes.data && casesRes.data.length > 0) {
+      cases = casesRes.data;
+      cases.forEach(c => {
+        if(!c.unitType) c.unitType = 'single';
+        if(c.isRemake === undefined) c.isRemake = false;
+        // patientOriginal → patient로 통합 (용량 절감)
+        if(c.patientOriginal && !c.patient) {
+          c.patient = c.patientOriginal;
+          delete c.patientOriginal;
+        }
+        // 기존 데이터에서 patient가 마스킹된 경우 original이 있으면 사용
+        if(c.patientOriginal && c.patient && c.patient.startsWith('*')) {
+          c.patient = c.patientOriginal;
+          delete c.patientOriginal;
+        }
+      });
+      localStorage.setItem('iroom_cases', JSON.stringify(cases));
+    } else {
+      const savedCases = localStorage.getItem('iroom_cases');
+      if(savedCases) {
+        cases = JSON.parse(savedCases);
+        cases.forEach(c => {
+          if(!c.unitType) c.unitType = 'single';
+          if(c.isRemake === undefined) c.isRemake = false;
+          // patientOriginal → patient로 통합 (용량 절감)
+          if(c.patientOriginal && !c.patient) {
+            c.patient = c.patientOriginal;
+            delete c.patientOriginal;
+          }
+          if(c.patientOriginal && c.patient && c.patient.startsWith('*')) {
+            c.patient = c.patientOriginal;
+            delete c.patientOriginal;
+          }
+        });
+      }
+    }
+
+    if (clinicsRes.data && clinicsRes.data.length > 0 && !clinicsRes.error) {
+      clinics = clinicsRes.data;
+      clinics.forEach(c => {
+        if(c.price_adjust !== undefined && c.priceAdjust === undefined) c.priceAdjust = c.price_adjust;
+        if(c.priceAdjust === undefined) c.priceAdjust = 0;
+        if(c.business_number !== undefined && !c.businessNumber) c.businessNumber = c.business_number;
+        if(!c.prices) c.prices = {};
+        if(!c.remakes) c.remakes = [];
+        if(!c.permissions) c.permissions = { statistics: false, sales: false, archive: false };
+      });
+      localStorage.setItem('iroom_clinics', JSON.stringify(clinics));
+    } else {
+      const savedClinics = localStorage.getItem('iroom_clinics');
+      if(savedClinics) {
+        clinics = JSON.parse(savedClinics);
+        clinics.forEach(c => {
+          if(!c.remakes) c.remakes = [];
+          if(!c.permissions) c.permissions = { statistics: false, sales: false, archive: false };
+        });
+      }
+    }
+
+    if (prostheticsRes.data && prostheticsRes.data.length > 0) {
+      prosthetics = prostheticsRes.data;
+      localStorage.setItem('iroom_prosthetics', JSON.stringify(prosthetics));
+    } else {
+      const savedProsthetics = localStorage.getItem('iroom_prosthetics');
+      if(savedProsthetics) prosthetics = JSON.parse(savedProsthetics);
+    }
+
+    if (settingsRes.data) {
+      settingsRes.data.forEach(s => {
+        if(s.key === 'showPriceToClinic') settings.showPriceToClinic = s.value;
+        if(s.key === 'adminPassword') settings.adminPassword = s.value;
+      });
+    }
+
+    const savedUser = localStorage.getItem('iroom_user');
+    if(savedUser) {
+      try {
+        currentUser = JSON.parse(savedUser);
+        showMainApp();
+      } catch(e) {
+        localStorage.removeItem('iroom_user');
+      }
+    }
+
+  } catch(e) {
+    console.warn('Supabase 로드 실패, localStorage 사용:', e);
+    loadFromLocalStorage();
+    toast('⚠️ 서버 연결 실패 - 로컬 데이터 사용');
+  }
+}
+
+async function saveData() {
+  // localStorage에 백업 저장
+  localStorage.setItem('iroom_cases', JSON.stringify(cases));
+  localStorage.setItem('iroom_clinics', JSON.stringify(clinics));
+  localStorage.setItem('iroom_prosthetics', JSON.stringify(prosthetics));
+  localStorage.setItem('iroom_settings', JSON.stringify(settings));
+  if (currentUser) localStorage.setItem('iroom_user', JSON.stringify(currentUser));
+
+  // Supabase에 동기화 (백그라운드)
+  try {
+    for (const c of cases) {
+      if(!c.id) continue;
+      await supabaseClient.from('cases').upsert({
+        id: c.id,
+        date: c.date || null,
+        clinic: c.clinic || null,
+        patient: c.patient || null,
+        tooth: c.tooth || null,
+        type: c.type || null,
+        unit_type: c.unitType || 'single',
+        is_remake: c.isRemake || false,
+        status: c.status || 'working',
+        ship_date: c.shipDate || null,
+        memo: c.memo || null,
+        done_viewed: c.doneViewed || false
+      }, { onConflict: 'id' }).then(() => {}).catch(() => {});
+    }
+    for (const clinic of clinics) {
+      await supabaseClient.from('clinics').upsert({
+        id: clinic.id,
+        name: clinic.name || null,
+        business_number: clinic.businessNumber || null,
+        phone: clinic.phone || null,
+        director: clinic.director || null,
+        email: clinic.email || null,
+        password: clinic.password || null,
+        prices: clinic.prices || {},
+        remakes: clinic.remakes || [],
+        price_adjust: clinic.priceAdjust || 0,
+        permissions: clinic.permissions || { statistics: false, sales: false, archive: false }
+      }, { onConflict: 'id' }).then(() => {}).catch(() => {});
+    }
+    for (const p of prosthetics) {
+      await supabaseClient.from('prosthetics').upsert({
+        id: p.id,
+        name: p.name || null,
+        price: p.price || 0
+      }).then(() => {}).catch(() => {});
+    }
+  } catch(e) {
+    // Supabase 실패 시 로컬만 사용
+  }
+}
+
+// 로그인
+async function handleLogin(e) {
+  e.preventDefault();
+  
+  const id = document.getElementById('loginIdField').value.trim();
+  const pw = document.getElementById('loginPwField').value;
+  const errorEl = document.getElementById('loginError');
+  const errorMsgEl = document.getElementById('errorMessage');
+  const attemptCountEl = document.getElementById('attemptCount');
+  const remainingEl = document.getElementById('remainingAttempts');
+  const btnEl = document.getElementById('loginBtn');
+  
+  // 차단 상태 확인
+  if(isLoginBlocked) {
+    errorMsgEl.textContent = '로그인 시도 횟수 초과. 관리자에게 문의하세요.';
+    attemptCountEl.style.display = 'none';
+    errorEl.classList.add('show');
+    return;
+  }
+  
+  // 빈 입력 방지
+  if(!id || !pw) {
+    errorMsgEl.textContent = '아이디와 비밀번호를 모두 입력해주세요.';
+    attemptCountEl.style.display = 'none';
+    errorEl.classList.add('show');
+    setTimeout(() => errorEl.classList.remove('show'), 3000);
+    return;
+  }
+  
+  btnEl.classList.add('loading');
+  btnEl.textContent = '로그인 중...';
+  btnEl.disabled = true;
+  
+  // 관리자 로그인 (가장 먼저 확인)
+    if(id === '이룸덴탈랩' && pw === 'jin7102__!!') {
+      loginAttempts = 0;
+      localStorage.setItem('iroom_loginAttempts', '0');
+      currentUser = { type: 'admin', name: '이룸덴탈랩', email: 'admin@iroom.com' };
+      localStorage.setItem('iroom_token', 'local-admin-token');
+      localStorage.setItem('iroom_user', JSON.stringify(currentUser));
+      await loadData();
+      btnEl.classList.remove('loading');
+      btnEl.textContent = '로그인';
+      btnEl.disabled = false;
+      return;
+    }
+    
+    // 거래처 로그인 (ID = 치과명, PW = 사업자번호 끝자리 5개)
+    if (!clinics || !Array.isArray(clinics)) {
+      // clinics가 로드되지 않았으면 로컬스토리지에서 로드
+      const savedClinics = localStorage.getItem('iroom_clinics');
+      if (savedClinics) {
+        clinics = JSON.parse(savedClinics);
+      } else {
+        clinics = [];
+      }
+    }
+    
+    const clinic = clinics.find(c => c.name === id);
+  if (clinic) {
+    // 해시된 비밀번호 검증
+    const isValid = await verifyPassword(pw, clinic.password || '');
+    
+    // 하위 호환: 기존 평문 비밀번호도 허용 (마이그레이션용)
+    const bizNumber = (clinic.businessNumber || '').replace(/-/g, '');
+    const expectedPw = bizNumber.slice(-5);
+    const isLegacyValid = pw === expectedPw;
+    
+    if (isValid || isLegacyValid) {
+      loginAttempts = 0;
+      localStorage.setItem('iroom_loginAttempts', '0');
+      currentUser = { type: 'clinic', name: clinic.name, id: clinic.id, email: clinic.email };
+      localStorage.setItem('iroom_token', 'local-clinic-token');
+      localStorage.setItem('iroom_user', JSON.stringify(currentUser));
+      await loadData(clinic.name);
+      btnEl.classList.remove('loading');
+      btnEl.textContent = '로그인';
+      btnEl.disabled = false;
+      
+      // 기존 평문 비밀번호가 있으면 해시로 업데이트
+      if (isLegacyValid && clinic.password && clinic.password.length < 64) {
+        const hashedPw = await hashPassword(pw);
+        clinic.password = hashedPw;
+        saveData();
+      }
+      return;
+    }
+  }
+  
+  // Supabase Auth 로그인 시도 - 별도 try-catch로 처리
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: id,
+      password: pw
+    });
+    
+    if (error) {
+      loginAttempts++;
+      localStorage.setItem('iroom_loginAttempts', loginAttempts.toString());
+      isLoginBlocked = loginAttempts >= 10;
+      
+      let errorMessage = '로그인에 실패했습니다.';
+      if (error.message.includes('Invalid login credentials')) {
+        errorMessage = '아이디 또는 비밀번호가 올바르지 않습니다.';
+      } else if (error.message.includes('Email not confirmed')) {
+        errorMessage = '이메일 인증이 필요합니다.';
+      }
+      
+      if(isLoginBlocked) {
+        errorMsgEl.textContent = '로그인 시도 횟수 초과. 관리자에게 문의하세요.';
+        attemptCountEl.style.display = 'none';
+      } else {
+        const remaining = 10 - loginAttempts;
+        errorMsgEl.textContent = errorMessage;
+        remainingEl.textContent = remaining;
+        attemptCountEl.style.display = 'block';
+      }
+      
+      errorEl.classList.add('show');
+      setTimeout(() => errorEl.classList.remove('show'), 3000);
+      btnEl.classList.remove('loading');
+      btnEl.textContent = '로그인';
+      btnEl.disabled = false;
+      return;
+    }
+    
+    // 로그인 성공
+    loginAttempts = 0;
+    localStorage.setItem('iroom_loginAttempts', '0');
+    supabaseSession = data.session;
+    
+    const { user } = data.session;
+    
+    if (user.email === 'admin@iroom.com') {
+      currentUser = { type: 'admin', name: '이룸덴탈랩', email: user.email };
+    } else {
+      const clinic = clinics.find(c => c.email === user.email);
+      if (clinic) {
+        currentUser = { type: 'clinic', name: clinic.name, id: clinic.id, email: user.email, permissions: clinic.permissions };
+      } else {
+        errorMsgEl.textContent = '등록된 거래처가 없습니다. 관리자에게 문의하세요.';
+        errorEl.classList.add('show');
+        await supabaseClient.auth.signOut();
+        btnEl.classList.remove('loading');
+        btnEl.textContent = '로그인';
+        btnEl.disabled = false;
+        return;
+      }
+    }
+    
+    localStorage.setItem('iroom_user', JSON.stringify(currentUser));
+    await loadData(currentUser.type === 'clinic' ? currentUser.name : null);
+    btnEl.classList.remove('loading');
+    btnEl.textContent = '로그인';
+    btnEl.disabled = false;
+  } catch(e) {
+    console.error('로그인 오류:', e);
+    errorMsgEl.textContent = '로그인 중 오류가 발생했습니다.';
+    errorEl.classList.add('show');
+    btnEl.classList.remove('loading');
+    btnEl.textContent = '로그인';
+    btnEl.disabled = false;
+  }
+}
+
+async function logout() {
+  // 실시간 알림 구독 해제
+  if (realtimeChannel) {
+    supabaseClient.removeChannel(realtimeChannel);
+    realtimeChannel = null;
+  }
+  
+  await supabaseClient.auth.signOut();
+  supabaseSession = null;
+  currentUser = null;
+  cases = [];
+  localStorage.removeItem('iroom_user');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('mainApp').classList.remove('logged-in');
+  document.getElementById('loginIdField').value = '';
+  document.getElementById('loginPwField').value = '';
+}
+
+// 로그인 시도 횟수 초기화 (설정 페이지에서 사용)
+function resetLoginAttempts() {
+  loginAttempts = 0;
+  isLoginBlocked = false;
+  localStorage.setItem('iroom_loginAttempts', '0');
+  toast('로그인 시도 횟수가 초기화되었습니다.');
+  
+  // 설정 페이지의 표시 업데이트
+  const attemptEl = document.getElementById('currentLoginAttempts');
+  if(attemptEl) attemptEl.textContent = '0';
+}
+
+// 비밀번호 Visibility 토글
+function togglePasswordVisibility(inputId, toggleEl) {
+  const input = document.getElementById(inputId);
+  if(input.type === 'password') {
+    input.type = 'text';
+    toggleEl.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    toggleEl.textContent = '👁️';
+  }
+}
+
+function showForgotPassword() {
+  openModal('forgotModal');
+}
+
+async function findPassword() {
+  const id = document.getElementById('forgot-id').value.trim();
+  const biz = document.getElementById('forgot-biz').value.trim();
+  const email = document.getElementById('forgot-email').value.trim();
+  
+  const clinic = clinics.find(c => c.name === id && c.businessNumber === biz && c.email === email);
+  
+  if(clinic) {
+    const newPw = Math.random().toString(36).slice(-6);
+    clinic.password = await hashPassword(newPw);
+    saveData();
+    closeModal('forgotModal');
+    alert(`임시 비밀번호: ${newPw}\n\n로그인 후 반드시 비밀번호를 변경해주세요.`);
+    toast('📧 임시 비밀번호가 발급되었습니다');
+  } else {
+    alert('일치하는 거래처 정보를 찾을 수 없습니다.');
+  }
+}
+
+function updateSidebarClinicSelect() {
+  const select = document.getElementById('sidebarClinicSelect');
+  const countBadge = document.getElementById('clinicCountBadge');
+  if(countBadge) countBadge.textContent = clinics.length;
+  if(!clinics.length) {
+    select.innerHTML = '<option value="">거래처 없음</option>';
+    return;
+  }
+  select.innerHTML = '<option value="">거래처 선택...</option>' + clinics.map(c => '<option value="' + c.id + '">' + c.name + '</option>').join('');
+}
+
+function jumpToClinic(clinicId) {
+  if(!clinicId) return;
+  showPage('clinics');
+  editClinic(parseInt(clinicId));
+}
+
+function showMainApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainApp').classList.add('logged-in');
+  
+  // 사용자 정보 표시
+  const userEl = document.getElementById('topbarUser');
+  if(currentUser.type === 'admin') {
+    userEl.textContent = '🔬 관리자';
+    userEl.classList.add('admin');
+    document.getElementById('menuSales').style.display = '';
+    document.getElementById('menuArchive').style.display = '';
+    document.getElementById('menuClinics').style.display = '';
+    document.getElementById('menuProsthetics').style.display = '';
+    document.getElementById('menuSettings').style.display = '';
+    document.getElementById('clinicFilter').style.display = '';
+    document.getElementById('listClinicFilter').style.display = '';
+    document.getElementById('topAddBtn').style.display = '';
+    document.getElementById('sidebarClinicPanel').style.display = 'block';
+    updateSidebarClinicSelect();
+    const pwItem = document.getElementById('pwChangeItem');
+    if(pwItem) pwItem.style.display = 'none';
+  } else {
+    userEl.textContent = '🏥 ' + currentUser.name;
+    
+    // 거래처 권한 확인
+    const clinic = clinics.find(c => c.name === currentUser.name);
+    const permissions = clinic?.permissions || { statistics: false, sales: false, archive: false };
+    
+    // 메뉴 권한에 따라 표시/숨기기
+    document.getElementById('menuStatistics').style.display = permissions.statistics ? '' : 'none';
+    document.getElementById('menuSales').style.display = permissions.sales ? '' : 'none';
+    document.getElementById('menuArchive').style.display = permissions.archive ? '' : 'none';
+    document.getElementById('menuClinics').style.display = 'none';
+    document.getElementById('menuProsthetics').style.display = 'none';
+    document.getElementById('menuSettings').style.display = '';
+    document.getElementById('clinicFilter').style.display = 'none';
+    document.getElementById('listClinicFilter').style.display = 'none';
+    document.getElementById('topAddBtn').style.display = '';
+    const pwItem = document.getElementById('pwChangeItem');
+    if(pwItem) pwItem.style.display = '';
+  }
+  
+  // 설정 토글
+  document.getElementById('showPriceToggle').classList.toggle('active', settings.showPriceToClinic);
+  
+  // 거래처 필터 업데이트
+  updateClinicFilter();
+  
+  // 페이지 렌더
+  renderTable();
+  renderClinics();
+  renderProsthetics();
+  populateSelects();
+  updateSalesMonthSelect();
+  
+  // 실시간 알림 구독
+  subscribeToRealtime();
+}
+
+// ═══════════════════════════════════
+// 페이지 전환
+// ═══════════════════════════════════
+function showPage(p) {
+  // 거래처 권한 확인
+  if(currentUser.type === 'clinic') {
+    const clinic = clinics.find(c => c.name === currentUser.name);
+    const permissions = clinic?.permissions || { statistics: false, sales: false, archive: false };
+    
+    if(p === 'statistics' && !permissions.statistics) {
+      alert('통계 페이지 접근 권한이 없습니다. 관리자에게 문의하세요.');
+      return;
+    }
+    if(p === 'sales' && !permissions.sales) {
+      alert('매출 분석 페이지 접근 권한이 없습니다. 관리자에게 문의하세요.');
+      return;
+    }
+    if(p === 'archive' && !permissions.archive) {
+      alert('데이터 관리 페이지 접근 권한이 없습니다. 관리자에게 문의하세요.');
+      return;
+    }
+  }
+  
+  ['list','statistics','sales','archive','register','clinics','prosthetics','settings'].forEach(n => {
+    const el = document.getElementById('page-' + n);
+    if(el) el.style.display = n === p ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const navMap = {list:0,statistics:1,sales:2,archive:3,register:4,clinics:5,prosthetics:6,settings:7};
+  document.querySelectorAll('.nav-item')[navMap[p]]?.classList.add('active');
+  const titles = {list:'📋 진행현황',statistics:'📊 통계 대시보드',sales:'💰 매출 분석',archive:'🗄️ 데이터 관리',register:'✏️ 접수 등록',clinics:'🏢 거래처 관리',prosthetics:'🗂️ 보철 종류',settings:'⚙️ 설정'};
+  document.getElementById('pageTitle').textContent = titles[p] || '';
+  
+  if(p === 'statistics') renderStatistics();
+  if(p === 'sales') renderSales();
+  if(p === 'archive') renderArchiveList();
+  if(p === 'clinics') renderClinics();
+  if(p === 'prosthetics') renderProsthetics();
+  if(p === 'register') populateSelects();
+  if(p === 'settings') {
+    const attemptEl = document.getElementById('currentLoginAttempts');
+    if(attemptEl) attemptEl.textContent = loginAttempts;
+  }
+}
+
+function filterStatus(s, btn) {
+  currentFilter = s;
+  document.querySelectorAll('.filter-tab').forEach(el => el.classList.remove('active'));
+  btn.classList.add('active');
+  
+  // 완료됨을 확인하면 확인 표시 추가
+  if(s === 'done') {
+    const doneCases = cases.filter(c => c.status === 'done');
+    doneCases.forEach(c => {
+      if(!c.doneViewed) {
+        c.doneViewed = true;
+        localStorage.setItem('iroom_cases', JSON.stringify(cases));
+      }
+    });
+    updateStatusCounts();
+  }
+  
+  renderTable();
+  updateStatusCounts();
+}
+
+// 모든 거래처 필터
+function filterAllClinics(btn) {
+  currentFilter = 'all';
+  document.querySelectorAll('.filter-tab').forEach(el => el.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+  updateStatusCounts();
+}
+
+// 상태별 개수 업데이트 (최적화)
+function updateStatusCounts() {
+  let filtered = cases;
+  
+  if(currentUser.type === 'admin') {
+    const clinicFilter = document.getElementById('clinicFilter').value;
+    const listClinicFilter = document.getElementById('listClinicFilter').value;
+    const activeClinicFilter = listClinicFilter !== 'all' ? listClinicFilter : clinicFilter;
+    
+    if(currentFilter === 'all' && (activeClinicFilter === 'all' || !activeClinicFilter)) {
+      filtered = cases;
+    } else if(activeClinicFilter && activeClinicFilter !== 'all') {
+      filtered = cases.filter(c => c.clinic === activeClinicFilter);
+    }
+  } else {
+    filtered = cases.filter(c => c.clinic === currentUser.name);
+  }
+  
+  let searchFiltered = filtered;
+  if(currentSearch) {
+    const q = currentSearch.toLowerCase();
+    searchFiltered = filtered.filter(c => 
+      [c.clinic, c.patient, c.patientOriginal, c.tooth, c.type].some(v => v && v.toLowerCase().includes(q))
+    );
+  }
+  
+  // 단일 reduce로 모든 상태 카운트 계산 (성능 최적화)
+  const counts = searchFiltered.reduce((acc, c) => {
+    acc.all++;
+    if(c.status === 'working') acc.working++;
+    else if(c.status === 'design') acc.design++;
+    else if(c.status === 'manufacturing') acc.manufacturing++;
+    else if(c.status === 'ship') acc.ship++;
+    else if(c.status === 'done' && !c.doneViewed) acc.done++;
+    return acc;
+  }, { all: 0, working: 0, design: 0, manufacturing: 0, ship: 0, done: 0 });
+  
+  document.getElementById('filter-all').innerHTML = `🏢 모든 거래처 <span class="status-count">${counts.all}</span>`;
+  document.getElementById('filter-working').innerHTML = `🟡 접수중 <span class="status-count">${counts.working}</span>`;
+  document.getElementById('filter-design').innerHTML = `🟣 디자인중 <span class="status-count">${counts.design}</span>`;
+  document.getElementById('filter-manufacturing').innerHTML = `🟠 제작중 <span class="status-count">${counts.manufacturing}</span>`;
+  document.getElementById('filter-ship').innerHTML = `🔵 배송중 <span class="status-count">${counts.ship}</span>`;
+  document.getElementById('filter-done').innerHTML = `🟢 완료됨 <span class="status-count">${counts.done}</span>`;
+}
+
+function searchCases(q) {
+  currentSearch = q;
+  renderTable();
+}
+
+// ═══════════════════════════════════
+// 테이블 렌더
+// ═══════════════════════════════════
+function getPrice(type, clinicName) {
+  // 치과별 단가 확인
+  const clinic = clinics.find(c => c.name === clinicName);
+  if(clinic && clinic.prices && clinic.prices[type]) {
+    return clinic.prices[type];
+  }
+  // 기본 단가
+  const pro = prosthetics.find(p => p.name === type);
+  return pro ? pro.price : 0;
+}
+
+// 치아 갯수 계산 (쉼표 또는 공백으로 분리)
+function getToothCount(tooth) {
+  if(!tooth) return 0;
+  return tooth.split(/[,\s]+/).filter(t => t.trim()).length;
+}
+
+// 총 가격 계산 (모든 보철 = 개수 × 단가, 리메이크는 0원)
+// 가격할인(%) 적용
+function calculateTotalPrice(type, clinicName, tooth, isRemake) {
+  if(isRemake) return 0;
+  const unitPrice = getPrice(type, clinicName);
+  const toothCount = getToothCount(tooth);
+  const subtotal = unitPrice * toothCount;
+  
+  // 거래처별 할인 적용
+  const clinic = clinics.find(c => c.name === clinicName);
+  const discount = clinic && clinic.priceAdjust ? clinic.priceAdjust : 0;
+  const discountAmount = subtotal * (discount / 100);
+  
+  return Math.round(subtotal - discountAmount);
+}
+
+function renderTable() {
+  const tbody = document.getElementById('caseTableBody');
+  const clinicFilter = document.getElementById('clinicFilter').value;
+  const listClinicFilter = document.getElementById('listClinicFilter').value;
+  
+  // "모든 거래처" 모드인지 확인 (currentFilter가 'all'이고 거래처 필터도 'all'인 경우)
+  const isAllClinicsMode = currentFilter === 'all';
+  
+  // 거래처 필터 결정 (관리자만)
+  let activeClinicFilter = 'all';
+  if(currentUser.type === 'admin') {
+    if(listClinicFilter && listClinicFilter !== 'all') {
+      activeClinicFilter = listClinicFilter;
+    } else if(clinicFilter && clinicFilter !== 'all') {
+      activeClinicFilter = clinicFilter;
+    }
+  } else {
+    activeClinicFilter = currentUser.name;
+  }
+  
+  let filtered = cases.filter(c => {
+    // 일반 사용자는 자신의 것만
+    if(currentUser.type === 'clinic' && c.clinic !== currentUser.name) return false;
+    
+    // 관리자: "모든 거래처" 모드면 필터 없음, 아니면 거래처 필터 적용
+    if(currentUser.type === 'admin') {
+      // currentFilter가 'all'이고 거래처 필터도 'all'이면 모든 거래처
+      if(isAllClinicsMode && activeClinicFilter === 'all') {
+        // 모든 거래처 - 필터 없음
+      } else if(activeClinicFilter !== 'all' && c.clinic !== activeClinicFilter) {
+        return false;
+      }
+    }
+    
+    // 상태 필터
+    if(currentFilter !== 'all' && c.status !== currentFilter) return false;
+    
+    // 검색 필터 (개선된 버전)
+    const searchField = document.getElementById('searchField')?.value || 'all';
+    const dateStart = document.getElementById('searchDateStart')?.value;
+    const dateEnd = document.getElementById('searchDateEnd')?.value;
+    
+    if(currentSearch || dateStart || dateEnd) {
+      const q = currentSearch?.toLowerCase() || '';
+      
+      if(q && searchField && searchField !== 'all') {
+        let fieldValue = '';
+        switch(searchField) {
+          case 'patient': fieldValue = c.patient || c.patientOriginal || ''; break;
+          case 'clinic': fieldValue = c.clinic || ''; break;
+          case 'tooth': fieldValue = c.tooth || ''; break;
+          case 'type': fieldValue = c.type || ''; break;
+          case 'date': fieldValue = c.date || ''; break;
+        }
+        if(!fieldValue.toLowerCase().includes(q)) return false;
+      } else if(q && searchField === 'all') {
+        const match = [c.clinic, c.patient, c.patientOriginal, c.tooth, c.type, c.date, c.status].some(v => v && v.toLowerCase().includes(q));
+        if(!match) return false;
+      }
+      
+      // 날짜 범위 검색
+      if(dateStart || dateEnd) {
+        const caseDate = c.date || '';
+        if(caseDate) {
+          if(dateStart && caseDate < dateStart) return false;
+          if(dateEnd && caseDate > dateEnd) return false;
+        }
+      }
+    }
+    return true;
+  });
+  
+  if(!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text3);">데이터가 없습니다</td></tr>';
+    return;
+  }
+  
+  const showPrice = currentUser.type === 'admin' || settings.showPriceToClinic;
+  
+  tbody.innerHTML = filtered.map(c => {
+    const unitPrice = getPrice(c.type, c.clinic);
+    const toothCount = getToothCount(c.tooth);
+    const isRemake = c.isRemake || false;
+    const totalPrice = calculateTotalPrice(c.type, c.clinic, c.tooth, isRemake);
+    const sm = statusMap[c.status] || {label:'알수없음',cls:'status-working'};
+    const typeLabel = isRemake ? '<span style="color:var(--red);font-weight:700;">🔄 리메이크</span>' : (c.unitType === 'bridge' ? '브릿지' : '싱글');
+    const dateDisplay = c.createdAt && currentUser.type === 'admin' 
+      ? c.createdAt.slice(0, 16).replace('T', ' ') 
+      : c.date;
+    return `<tr onclick="openDetail(${c.id})" style="cursor:pointer;">
+      <td>${dateDisplay}</td>
+      <td>${c.clinic}</td>
+      <td><strong>${getDisplayPatient(c)}</strong></td>
+      <td><span class="tooth-num">${c.tooth}</span><span style="font-size:11px;color:var(--text3);margin-left:4px;">(${toothCount}개)</span></td>
+      <td>${c.type}</td>
+      <td>${typeLabel}</td>
+      <td>${showPrice ? '<div class="price-num">' + (isRemake ? '0원' : unitPrice.toLocaleString() + '원 × ' + toothCount) + '</div>' + (isRemake ? '' : '<div style="font-size:12px;color:var(--green);font-weight:700;">= ' + totalPrice.toLocaleString() + '원</div>') : '***'}</td>
+      <td><span class="status ${sm.cls}">${sm.label}</span></td>
+      <td>${c.shipDate || '—'}</td>
+      <td style="text-align:center;">
+        ${(c.memo ? '<span style="cursor:pointer;font-size:16px;" title="' + c.memo.replace(/"/g,'&quot;') + '">📝</span>' : '') + (c.photos && c.photos.length ? '<span style="cursor:pointer;font-size:16px;margin-left:4px;" onclick="event.stopPropagation();viewPhotos(' + c.id + ')">📷(' + c.photos.length + ')</span>' : '') + (currentUser.type === 'admin' ? '<span style="cursor:pointer;font-size:14px;margin-left:4px;" onclick="event.stopPropagation();editCaseMemo(' + c.id + ')">✏️</span>' : '')}
+      </td>
+      <td>
+        ${currentUser.type === 'admin' ? '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteCase(' + c.id + ')">삭제</button>' : ''}
+      </td>
+    </tr>`;
+  }).join('');
+  
+  // 통계 업데이트
+  const allCases = currentUser.type === 'clinic' ? cases.filter(c => c.clinic === currentUser.name) : cases;
+  ['working','design','manufacturing','ship','done'].forEach(s => {
+    document.getElementById('cnt-' + s).textContent = allCases.filter(c => c.status === s).length;
+  });
+  document.getElementById('shipBadge').textContent = allCases.filter(c => c.status === 'ship').length;
+  
+  // 상태별 개수 업데이트
+  updateStatusCounts();
+}
+
+const statusMap = {
+  working:{label:'접수중',cls:'status-working'},
+  design:{label:'디자인중',cls:'status-design'},
+  manufacturing:{label:'제작중',cls:'status-manufacturing'},
+  ship:{label:'배송중',cls:'status-ship'},
+  done:{label:'완료됨',cls:'status-done'}
+};
+
+// ═══════════════════════════════════
+// 상세 패널
+// ═══════════════════════════════════
+function openDetail(id) {
+  const c = cases.find(x => x.id === id);
+  if(!c) return;
+  
+  const price = getPrice(c.type, c.clinic);
+  const sm = statusMap[c.status];
+  const showPrice = currentUser.type === 'admin' || settings.showPriceToClinic;
+  
+  const isRemake = c.isRemake || false;
+  const totalPrice = isRemake ? 0 : price;
+  
+  let html = `
+    <div class="panel-section">
+      <div class="panel-section-title">📋 기본 정보</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">치과명</div><div class="info-value">${c.clinic}</div></div>
+        <div class="info-item"><div class="info-label">환자명</div><div class="info-value">${getDisplayPatient(c)}</div></div>
+        <div class="info-item"><div class="info-label">치식</div><div class="info-value">${c.tooth}</div></div>
+        <div class="info-item"><div class="info-label">보철 종류</div><div class="info-value">${c.type}</div></div>
+        <div class="info-item"><div class="info-label">구분</div><div class="info-value">${isRemake ? '<span style="color:var(--red);font-weight:700;">🔄 리메이크</span>' : (c.unitType === 'bridge' ? '브릿지' : '싱글')}</div></div>
+        ${showPrice ? '<div class="info-item"><div class="info-label">단가</div><div class="info-value price-num">' + (isRemake ? '0원 (리메이크)' : totalPrice.toLocaleString() + '원') + '</div></div>' : ''}
+        <div class="info-item"><div class="info-label">출고 예정일</div><div class="info-value">${c.shipDate || '—'}</div></div>
+        <div class="info-item"><div class="info-label">접수일</div><div class="info-value">${c.date}</div></div>
+        <div class="info-item"><div class="info-label">상태</div><div class="info-value"><span class="status ${sm.cls}">${sm.label}</span></div></div>
+      </div>
+      ${c.memo ? `
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+        <div class="info-label" style="margin-bottom:8px;">📝 메모</div>
+        <div style="white-space:pre-wrap;background:var(--surface2);padding:12px;border-radius:8px;font-size:13px;line-height:1.6;">${c.memo}</div>
+      </div>
+      ` : ''}
+    </div>
+  `;
+  
+  if(currentUser.type === 'admin') {
+    html += `
+    <div class="panel-section">
+      <div class="panel-section-title">📌 상태 변경</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${Object.entries(statusMap).map(([k,v]) => '<button class="btn btn-sm ' + (c.status === k ? 'btn-primary' : 'btn-secondary') + '" onclick="changeStatus(' + c.id + ',\'' + k + '\')">' + v.label + '</button>').join('')}
+      </div>
+    </div>
+    `;
+  }
+  
+  document.getElementById('page-list').insertAdjacentHTML('beforeend', '<div class="detail-panel open" id="detailPanel" style="position:fixed;top:0;right:0;width:400px;height:100vh;background:var(--surface);z-index:300;box-shadow:var(--shadow-lg);padding:20px;overflow-y:auto;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h3>상세 정보</h3><button class="btn btn-ghost" onclick="this.closest(\'.detail-panel\').remove()">✕</button></div>' + html + '</div>');
+}
+
+function changeStatus(id, status) {
+  const c = cases.find(x => x.id === id);
+  if(c) {
+    c.status = status;
+    saveData();
+    renderTable();
+    document.querySelector('.detail-panel').remove();
+    toast('✅ 상태 변경 완료');
+  }
+}
+
+function deleteCase(id) {
+  if(!confirm('삭제하시겠습니까?')) return;
+  cases = cases.filter(c => c.id !== id);
+  saveData();
+  renderTable();
+  toast('🗑️ 삭제 완료');
+}
+
+// ═══════════════════════════════════
+// 통계
+// ═══════════════════════════════════
+function setPeriod(p, btn) {
+  currentPeriod = p;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderStatistics();
+}
+
+// 기간 필터링 함수
+function getPeriodFilter(p) {
+  const now = new Date();
+  const today = now.toISOString().slice(0,10);
+  let startDate = '';
+  
+  switch(p) {
+    case 'week':
+      const weekAgo = new Date(now);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      startDate = weekAgo.toISOString().slice(0,10);
+      break;
+    case 'month':
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
+      break;
+    case 'quarter':
+      const quarter = Math.floor(now.getMonth() / 3);
+      startDate = new Date(now.getFullYear(), quarter * 3, 1).toISOString().slice(0,10);
+      break;
+    case 'year':
+      startDate = new Date(now.getFullYear(), 0, 1).toISOString().slice(0,10);
+      break;
+    case 'all':
+    default:
+      startDate = '';
+  }
+  
+  return startDate;
+}
+
+function renderStatistics() {
+  const showPrice = currentUser.type === 'admin' || settings.showPriceToClinic;
+  let filtered = cases;
+  
+  // 기간 필터 적용
+  const startDate = getPeriodFilter(currentPeriod);
+  if(startDate) {
+    filtered = filtered.filter(c => c.date >= startDate);
+  }
+  
+  if(currentUser.type === 'clinic') {
+    filtered = filtered.filter(c => c.clinic === currentUser.name);
+  }
+  
+  const total = filtered.length;
+  const done = filtered.filter(c => c.status === 'done').length;
+  let totalSales = 0;
+  let avgPrice = 0;
+  
+  if(showPrice) {
+    filtered.forEach(c => {
+      totalSales += calculateTotalPrice(c.type, c.clinic, c.tooth, c.isRemake || false);
+    });
+    avgPrice = total > 0 ? Math.round(totalSales / total) : 0;
+  }
+  
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statSales').textContent = showPrice ? totalSales.toLocaleString() + '원' : '***';
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statAvg').textContent = showPrice ? avgPrice.toLocaleString() + '원' : '***';
+  
+  // 차트
+  renderStatusChart(filtered);
+  renderClinicChart(filtered);
+  
+  // 보철별 통계
+  renderProstheticStats(filtered);
+  // 리메이크율
+  renderRemakeStats(filtered);
+  // 작업 관리
+  renderTaskManagement();
+}
+
+function renderProstheticStats(filtered) {
+  const stats = {};
+  filtered.forEach(c => {
+    if(!stats[c.type]) stats[c.type] = {count: 0, sales: 0};
+    stats[c.type].count++;
+    stats[c.type].sales += calculateTotalPrice(c.type, c.clinic, c.tooth, c.isRemake || false);
+  });
+  const sorted = Object.entries(stats).sort((a,b) => b[1].count - a[1].count);
+  const html = sorted.length ? sorted.map(([type, d]) => `
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+      <span>${type}</span>
+      <span><strong>${d.count}</strong>건 ${document.getElementById('statSales').textContent !== '***' ? '(' + d.sales.toLocaleString() + '원)' : ''}</span>
+    </div>
+  `).join('') : '<div style="color:var(--text3);">데이터 없음</div>';
+  document.getElementById('prostheticStats').innerHTML = html;
+}
+
+function renderRemakeStats(filtered) {
+  const total = filtered.length;
+  const remakeCount = filtered.filter(c => c.isRemake).length;
+  const rate = total > 0 ? Math.round((remakeCount / total) * 100) : 0;
+  const html = `
+    <div style="text-align:center;padding:20px;">
+      <div style="font-size:36px;font-weight:800;color:${rate > 10 ? 'var(--red)' : 'var(--green)'}">${rate}%</div>
+      <div style="color:var(--text3);margin-top:8px;">리메이크율 (${remakeCount}/${total}건)</div>
+    </div>
+  `;
+  document.getElementById('remakeStats').innerHTML = html;
+}
+
+function renderTaskManagement() {
+  const today = new Date().toISOString().slice(0,10);
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0,10);
+  const dayAfter = new Date(Date.now() + 172800000).toISOString().slice(0,10);
+  
+  // 급한 작업 (오늘~내일 출고)
+  let urgent = cases.filter(c => c.shipDate && c.shipDate >= today && c.shipDate <= dayAfter && c.status !== 'done');
+  urgent = urgent.slice(0, 5);
+  const urgentHtml = urgent.length ? urgent.map(c => `
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span>${c.clinic} - ${getDisplayPatient(c)}</span>
+      <span style="font-weight:600;">${c.tooth} (${c.shipDate})</span>
+    </div>
+  `).join('') : '<div style="color:var(--text3);">급한 작업 없음</div>';
+  document.getElementById('urgentTasks').innerHTML = urgentHtml;
+  
+  // 오늘 일정
+  const todayTasks = cases.filter(c => c.shipDate === today && c.status !== 'done').slice(0, 5);
+  const todayHtml = todayTasks.length ? todayTasks.map(c => `
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span>${c.clinic} - ${getDisplayPatient(c)}</span>
+      <span style="font-weight:600;">${c.tooth} ${c.type}</span>
+    </div>
+  `).join('') : '<div style="color:var(--text3);">오늘 일정 없음</div>';
+  document.getElementById('todayTasks').innerHTML = todayHtml;
+  
+  // 최근 완료
+  const recentDone = cases.filter(c => c.status === 'done').slice(0, 5);
+  const recentHtml = recentDone.length ? recentDone.map(c => `
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;">
+      <span>${c.date} ${c.clinic}</span>
+      <span>${c.patient} ${c.type}</span>
+    </div>
+  `).join('') : '<div style="color:var(--text3);">최근 완료 없음</div>';
+  document.getElementById('recentDone').innerHTML = recentHtml;
+}
+
+function renderStatusChart(filtered) {
+  const ctx = document.getElementById('statusChart');
+  if(!ctx) return;
+  const data = [
+    {status:'working',label:'접수중',count:filtered.filter(c => c.status === 'working').length},
+    {status:'design',label:'디자인중',count:filtered.filter(c => c.status === 'design').length},
+    {status:'manufacturing',label:'제작중',count:filtered.filter(c => c.status === 'manufacturing').length},
+    {status:'ship',label:'배송중',count:filtered.filter(c => c.status === 'ship').length},
+    {status:'done',label:'완료됨',count:filtered.filter(c => c.status === 'done').length}
+  ].filter(d => d.count > 0);
+  
+  if(statusChart) statusChart.destroy();
+  statusChart = new Chart(ctx, {
+    type:'doughnut',
+    data:{labels:data.map(d => d.label),datasets:[{data:data.map(d => d.count),backgroundColor:['#f59e0b','#8b5cf6','#ea580c','#2563eb','#16a34a']}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+  });
+}
+
+function renderClinicChart(filtered) {
+  const ctx = document.getElementById('clinicChart');
+  if(!ctx) return;
+  const clinicData = {};
+  filtered.forEach(c => { clinicData[c.clinic] = (clinicData[c.clinic] || 0) + 1; });
+  const sorted = Object.entries(clinicData).sort((a,b) => b[1] - a[1]).slice(0,6);
+  
+  if(clinicChart) clinicChart.destroy();
+  clinicChart = new Chart(ctx, {
+    type:'bar',
+    data:{labels:sorted.map(s => s[0]),datasets:[{data:sorted.map(s => s[1]),backgroundColor:'#2563eb',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:false},scales:{y:{beginAtZero:true}}}
+  });
+}
+
+// ═══════════════════════════════════
+// 매출 분석
+// ═══════════════════════════════════
+function updateSalesMonthSelect() {
+  const select = document.getElementById('salesMonth');
+  const months = [...new Set(cases.filter(c => c.date).map(c => c.date.slice(0,7)))].sort().reverse();
+  select.innerHTML = '<option value="">전체</option>' + months.map(m => '<option value="' + m + '">' + m + '</option>').join('');
+}
+
+function setThisMonth() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  document.getElementById('salesStartDate').value = start.toISOString().slice(0,10);
+  document.getElementById('salesEndDate').value = now.toISOString().slice(0,10);
+  renderSales();
+}
+
+function setLast3Months() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+  document.getElementById('salesStartDate').value = start.toISOString().slice(0,10);
+  document.getElementById('salesEndDate').value = now.toISOString().slice(0,10);
+  renderSales();
+}
+
+function renderSales() {
+  const startDate = document.getElementById('salesStartDate').value;
+  const endDate = document.getElementById('salesEndDate').value;
+  let filtered = cases;
+  
+  if(startDate && endDate) {
+    filtered = cases.filter(c => c.date >= startDate && c.date <= endDate);
+  } else if(startDate) {
+    filtered = cases.filter(c => c.date >= startDate);
+  } else if(endDate) {
+    filtered = cases.filter(c => c.date <= endDate);
+  }
+  
+  if(currentUser.type === 'clinic') filtered = filtered.filter(c => c.clinic === currentUser.name);
+  
+  const showPrice = currentUser.type === 'admin' || settings.showPriceToClinic;
+  
+  // 요약
+  const totalCount = filtered.length;
+  const doneCount = filtered.filter(c => c.status === 'done').length;
+  let totalSales = 0;
+  filtered.forEach(c => {
+    totalSales += calculateTotalPrice(c.type, c.clinic, c.tooth, c.isRemake || false);
+  });
+  const avgPrice = totalCount > 0 ? Math.round(totalSales / totalCount) : 0;
+  
+  document.getElementById('salesTotalCount').textContent = totalCount + '건';
+  document.getElementById('salesTotalAmount').textContent = showPrice ? totalSales.toLocaleString() + '원' : '***';
+  document.getElementById('salesAvgPrice').textContent = showPrice ? avgPrice.toLocaleString() + '원' : '***';
+  document.getElementById('salesDoneCount').textContent = doneCount + '건';
+  
+  // 월별 추이
+  const monthlyData = {};
+filtered.forEach(c => {
+    if(!c.date) return;
+    const month = c.date.slice(0,7);
+    if(!monthlyData[month]) monthlyData[month] = {count:0,sales:0};
+    monthlyData[month].count++;
+    monthlyData[month].sales += calculateTotalPrice(c.type, c.clinic, c.tooth, c.isRemake || false);
+  });
+  const sortedMonths = Object.entries(monthlyData).sort((a,b) => a[0].localeCompare(b[0]));
+  
+  // 차트
+  renderMonthlyChart(sortedMonths);
+  renderClinicSalesChart(filtered);
+  
+  // 상세 테이블
+  let html = '<table class="sales-table"><thead><tr><th>날짜</th><th>치과</th><th>환자</th><th>치아</th><th>보철</th><th>구분</th><th>수량</th>' + (showPrice ? '<th>매출</th>' : '') + '</tr></thead><tbody>';
+  filtered.sort((a,b) => b.date.localeCompare(a.date)).forEach(c => {
+    const toothCount = getToothCount(c.tooth);
+    const isRemake = c.isRemake || false;
+    const price = calculateTotalPrice(c.type, c.clinic, c.tooth, isRemake);
+    const typeLabel = isRemake ? '🔄 리메이크' : (c.unitType === 'bridge' ? '브릿지' : '싱글');
+    html += '<tr><td>' + c.date + '</td><td>' + c.clinic + '</td><td>' + getDisplayPatient(c) + '</td><td>' + c.tooth + '</td><td>' + c.type + '</td><td>' + typeLabel + '</td><td>' + toothCount + '개</td>' + (showPrice ? '<td>' + price.toLocaleString() + '원</td>' : '') + '</tr>';
+  });
+  html += '</tbody></table>';
+  
+  document.getElementById('salesContent').innerHTML = html;
+}
+
+let monthlyChartInstance = null;
+let clinicSalesChartInstance = null;
+
+function renderMonthlyChart(data) {
+  const ctx = document.getElementById('monthlyChart');
+  if(!ctx) return;
+  if(monthlyChartInstance) monthlyChartInstance.destroy();
+  monthlyChartInstance = new Chart(ctx, {
+    type:'line',
+    data:{labels:data.map(d => d[0]),datasets:[{label:'매출',data:data.map(d => d[1].sales),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,0.1)',fill:true,tension:0.4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+  });
+}
+
+function renderClinicSalesChart(filtered) {
+  const ctx = document.getElementById('clinicSalesChart');
+  if(!ctx) return;
+  const clinicData = {};
+  filtered.forEach(c => {
+    clinicData[c.clinic] = (clinicData[c.clinic] || 0) + calculateTotalPrice(c.type, c.clinic, c.tooth, c.isRemake || false);
+  });
+  const sorted = Object.entries(clinicData).sort((a,b) => b[1] - a[1]).slice(0,6);
+  if(clinicSalesChartInstance) clinicSalesChartInstance.destroy();
+  clinicSalesChartInstance = new Chart(ctx, {
+    type:'bar',
+    data:{labels:sorted.map(s => s[0]),datasets:[{data:sorted.map(s => s[1]),backgroundColor:'#16a34a',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:false},scales:{y:{beginAtZero:true}}}
+  });
+}
+
+function exportExcel() {
+  const month = document.getElementById('salesMonth').value || '전체';
+  const wb = XLSX.utils.book_new();
+  
+  // 시트 1: 전체 케이스
+  let filtered = cases;
+  if(month && month !== '전체') filtered = cases.filter(c => c.date && c.date.startsWith(month));
+  if(currentUser.type === 'clinic') filtered = filtered.filter(c => c.clinic === currentUser.name);
+  
+  const caseData = [['접수일', '치과', '환자', '치아번호', '보철종류', '단가', '수량', '상태', '메모']];
+  filtered.forEach(c => {
+    const price = getPrice(c.type, c.clinic);
+    const count = getToothCount(c.tooth);
+    const statusText = {working:'접수중', design:'디자인중', manufacturing:'제작중', ship:'배송중', done:'완료'}[c.status] || c.status;
+    caseData.push([c.date || '', c.clinic || '', c.patientOriginal || c.patient || '', c.tooth || '', c.type || '', price, count, statusText, c.memo || '']);
+  });
+  const ws1 = XLSX.utils.aoa_to_sheet(caseData);
+  XLSX.utils.book_append_sheet(wb, ws1, '전체 케이스');
+  
+  // 시트 2: 거래처별 요약
+  const clinicSummary = [['거래처', '총 건수', '총 매출']];
+  const clinicData = {};
+  filtered.forEach(c => {
+    const price = getPrice(c.type, c.clinic);
+    if(!clinicData[c.clinic]) clinicData[c.clinic] = {count:0, sales:0};
+    clinicData[c.clinic].count++;
+    clinicData[c.clinic].sales += price;
+  });
+  Object.entries(clinicData).sort((a,b) => b[1].sales - a[1].sales).forEach(([name, data]) => {
+    clinicSummary.push([name, data.count, data.sales]);
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(clinicSummary);
+  XLSX.utils.book_append_sheet(wb, ws2, '거래처별 매출');
+  
+  // 시트 3: 매출 보고서
+  const salesData = [['이룸덴탈랩 매출 보고서', '', '', '', month + ' 기준'], [], ['구분', '건수', '매출']];
+  const typeData = {};
+  filtered.forEach(c => {
+    const price = getPrice(c.type, c.clinic);
+    if(!typeData[c.type]) typeData[c.type] = {count:0, sales:0};
+    typeData[c.type].count++;
+    typeData[c.type].sales += price;
+  });
+  Object.entries(typeData).sort((a,b) => b[1].sales - a[1].sales).forEach(([k,v]) => {
+    salesData.push([k, v.count, v.sales]);
+  });
+  const ws3 = XLSX.utils.aoa_to_sheet(salesData);
+  XLSX.utils.book_append_sheet(wb, ws3, '매출보고서');
+  
+  // 시트 4: 거래처 목록
+  const clinicList = [['거래처명', '사업자번호', '전화번호', '원장님', '이메일', '가격할인(%)']];
+  clinics.forEach(c => {
+    clinicList.push([c.name || '', c.businessNumber || '', c.phone || '', c.director || '', c.email || '', c.priceAdjust || 0]);
+  });
+  const ws4 = XLSX.utils.aoa_to_sheet(clinicList);
+  XLSX.utils.book_append_sheet(wb, ws4, '거래처 목록');
+  
+  XLSX.writeFile(wb, 'iroom_export_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  toast('📊 엑셀 다운로드 완료 (4개 시트)');
+}
+
+// ═══════════════════════════════════
+// 거래처별 단가표 PDF 생성
+// ═══════════════════════════════════
+function generateClinicPricePDF() {
+  if (!clinics.length) {
+    alert('등록된 거래처가 없습니다');
+    return;
+  }
+  
+  let html = `
+  <!DOCTYPE html>
+  <html><head><meta charset="UTF-8"><title>이룸덴탈랩 단가표</title>
+  <style>
+    body { font-family: 'Noto Sans KR', sans-serif; padding: 40px; }
+    h1 { text-align: center; color: #1a1d2e; margin-bottom: 30px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+    th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+    th { background: #f5f5f5; }
+    .clinic-name { font-weight: bold; text-align: left; }
+    .price-zero { color: #999; }
+    @media print { body { padding: 20px; } }
+  </style></head>
+  <body>
+  <h1>🏥 이룸덴탈랩 단가표</h1>
+  `;
+  
+  clinics.forEach(clinic => {
+    html += `
+    <table>
+    <tr><th colspan="${prosthetics.length + 1}" class="clinic-name">🏢 ${clinic.name}</th></tr>
+    <tr><td>보철종류</td>${prosthetics.map(p => `<td>${p.name}</td>`).join('')}</tr>
+    <tr><td>단가</td>${prosthetics.map(p => {
+      const price = (clinic.prices && clinic.prices[p.name]) || p.price || 0;
+      return `<td class="${price === 0 ? 'price-zero' : ''}">${price.toLocaleString()}원</td>`;
+    }).join('')}</tr>
+    </table>
+    `;
+  });
+  
+  html += `
+  <p style="text-align:center;color:#666;margin-top:30px;">
+  발급일: ${new Date().toLocaleDateString('ko-KR')}
+  </p></body></html>`;
+  
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(html);
+  printWindow.document.close();
+  printWindow.print();
+  
+  toast('단가표가 생성되었습니다. 인쇄对话框에서 PDF로 저장하세요');
+}
+
+// ═══════════════════════════════════
+// 거래처
+// ═══════════════════════════════════
+function renderClinics() {
+  const tbody = document.getElementById('clinicTableBody');
+  
+  // 거래처(치과) 사용자는 자신의 정보만 볼 수 있음
+  let displayClinics = clinics;
+  if(currentUser.type === 'clinic') {
+    displayClinics = clinics.filter(c => c.name === currentUser.name);
+  }
+  
+  if(!displayClinics.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text3);">등록된 거래처가 없습니다</td></tr>';
+    return;
+  }
+  
+  const isAdmin = currentUser.type === 'admin';
+  
+  tbody.innerHTML = displayClinics.map(c => `<tr>
+    <td><strong>${c.name}</strong></td>
+    <td>${c.businessNumber}</td>
+    <td>${c.phone || '—'}</td>
+    <td>${c.director || '—'}</td>
+    <td>${c.email || '—'}</td>
+    <td>
+      <span style="font-family:monospace;">••••••</span>
+      <button class="btn btn-ghost btn-sm" onclick="showClinicPw('${c.name}')">👁️</button>
+    </td>
+    <td class="clinic-actions">
+      ${isAdmin ? '<button class="btn btn-secondary btn-sm" onclick="editClinic(' + c.id + ')">수정</button>' : ''}
+      ${isAdmin ? '<button class="btn btn-danger btn-sm" onclick="deleteClinic(' + c.id + ')">삭제</button>' : ''}
+    </td>
+  </tr>`).join('');
+}
+
+async function submitClinic() {
+  const name = document.getElementById('new-clinic-name').value.trim();
+  const biz = document.getElementById('new-clinic-biz').value.trim();
+  const phone = document.getElementById('new-clinic-phone').value.trim();
+  const director = document.getElementById('new-clinic-director').value.trim();
+  const email = document.getElementById('new-clinic-email').value.trim();
+  
+  if(!name || !biz) {
+    alert('거래처명과 사업자등록번호는 필수입니다');
+    return;
+  }
+  
+  if(clinics.find(c => c.name === name)) {
+    alert('이미 존재하는 거래처명입니다');
+    return;
+  }
+  
+  const plainPassword = biz.replace(/-/g, '').slice(-5);
+  const hashedPassword = await hashPassword(plainPassword);
+  
+  clinics.push({
+    id: Date.now(),
+    name,
+    businessNumber: biz,
+    phone,
+    director,
+    email,
+    password: hashedPassword,
+    priceAdjust: 0,
+    prices: {}
+  });
+  
+  try {
+    await saveData();
+    closeModal('clinicModal');
+    renderClinics();
+    updateClinicFilter();
+    populateSelects();
+    updateSidebarClinicSelect();
+    toast('✅ 거래처 추가 완료');
+  } catch(e) {
+    console.error('거래처 추가 오류:', e);
+    alert('거래처 추가 중 오류가 발생했습니다');
+  }
+}
+
+function showClinicPw(name) {
+  const clinic = clinics.find(c => c.name === name);
+  if(clinic) {
+    alert('비밀번호는 보안상 표시되지 않습니다.\n\n거래처가 비밀번호를 잊어버린 경우\n"비밀번호 찾기"를 사용하세요.');
+  }
+}
+
+function editClinic(id) {
+  const clinic = clinics.find(c => c.id === id);
+  if(!clinic) return;
+  
+  const remakes = clinic.remakes || [];
+  const remakeListHtml = remakes.length ? remakes.map((r,i) => `
+    <div style="background:var(--surface2);padding:10px;border-radius:6px;margin-bottom:8px;font-size:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <strong>${r.date}</strong>
+        <button class="btn btn-ghost btn-sm" style="padding:2px 6px;" onclick="deleteRemake(${id}, ${i})">✕</button>
+      </div>
+      <div><strong>치아:</strong> ${r.tooth}</div>
+      <div><strong>사유:</strong> ${r.reason}</div>
+    </div>
+  `).join('') : '<div style="color:var(--text3);font-size:12px;">리메이크 기록이 없습니다</div>';
+  
+  let displayPw = clinic.password ? '******' : '';
+  if(clinic.password && clinic.password.startsWith('sha256:')) {
+    displayPw = '****** (해시됨)';
+  }
+  
+  const permissions = clinic.permissions || { statistics: false, sales: false, archive: false };
+  
+  let html = `
+    <div style="background:var(--blue-l);padding:12px;border-radius:8px;margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px;">🔑 로그인 정보 (관리자용)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+        <div><span style="color:var(--text2);">아이디:</span> <strong>${clinic.name}</strong></div>
+        <div><span style="color:var(--text2);">비밀번호:</span> <strong>${displayPw}</strong></div>
+      </div>
+    </div>
+    <div class="form-row"><label class="form-label">거래처명</label><input class="form-input" id="edit-clinic-name" value="${clinic.name}"></div>
+    <div class="form-row"><label class="form-label">사업자번호</label><input class="form-input" id="edit-clinic-biz" value="${clinic.businessNumber}"></div>
+    <div class="form-row"><label class="form-label">전화번호</label><input class="form-input" id="edit-clinic-phone" value="${clinic.phone || ''}"></div>
+    <div class="form-row"><label class="form-label">원장님</label><input class="form-input" id="edit-clinic-director" value="${clinic.director || ''}"></div>
+    <div class="form-row"><label class="form-label">이메일</label><input class="form-input" id="edit-clinic-email" value="${clinic.email || ''}"></div>
+    <div class="form-row"><label class="form-label">비밀번호</label><input class="form-input" id="edit-clinic-pw" placeholder="변경할 비밀번호만 입력"></div>
+    <div class="form-row"><label class="form-label">가격할인(%)</label><input type="number" class="form-input" id="edit-clinic-priceadjust" value="${clinic.priceAdjust || 0}" min="0" max="100" step="1"></div>
+    
+    <!-- 권한 설정 -->
+    <div class="form-row" style="margin-top:16px;padding-top:16px;border-top:2px solid var(--blue);">
+      <div class="form-label" style="margin-bottom:12px;color:var(--blue);font-weight:700;">🔐 메뉴 접근 권한 (거래처에게 허용할 기능)</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+        <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:8px;cursor:pointer;border:2px solid ${permissions.statistics ? 'var(--blue)' : 'transparent'};">
+          <input type="checkbox" id="perm-statistics" ${permissions.statistics ? 'checked' : ''} style="width:18px;height:18px;">
+          <div>
+            <div style="font-weight:600;font-size:13px;">📊 통계</div>
+            <div style="font-size:11px;color:var(--text3);">대시보드 보기</div>
+          </div>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:8px;cursor:pointer;border:2px solid ${permissions.sales ? 'var(--blue)' : 'transparent'};">
+          <input type="checkbox" id="perm-sales" ${permissions.sales ? 'checked' : ''} style="width:18px;height:18px;">
+          <div>
+            <div style="font-weight:600;font-size:13px;">💰 매출</div>
+            <div style="font-size:11px;color:var(--text3);">매출 분석 보기</div>
+          </div>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:8px;cursor:pointer;border:2px solid ${permissions.archive ? 'var(--blue)' : 'transparent'};">
+          <input type="checkbox" id="perm-archive" ${permissions.archive ? 'checked' : ''} style="width:18px;height:18px;">
+          <div>
+            <div style="font-weight:600;font-size:13px;">🗄️ 데이터</div>
+            <div style="font-size:11px;color:var(--text3);">아카이브 보기</div>
+          </div>
+        </label>
+      </div>
+    </div>
+    
+    <div class="form-row" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+      <div class="form-label" style="margin-bottom:8px;">💰 보철별 단가 설정</div>
+      <div id="clinic-prices-list" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+        ${prosthetics.map(p => `
+          <div style="background:var(--surface2);padding:8px;border-radius:6px;">
+            <div style="font-size:12px;font-weight:600;margin-bottom:4px;">${p.name}</div>
+            <input type="number" class="form-input" id="edit-price-${p.name}" value="${clinic.prices && clinic.prices[p.name] ? clinic.prices[p.name] : p.price || 0}" min="0" placeholder="단가">
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+      <div class="form-label" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>🔄 리메이크 기록 <span style="font-weight:400;color:var(--text3);">(${remakes.length}건)</span></span>
+      </div>
+      <div style="margin:12px 0;max-height:250px;overflow-y:auto;background:var(--surface2);border-radius:8px;padding:10px;">${remakeListHtml}</div>
+      <div style="display:flex;gap:8px;">
+        <input class="form-input" id="new-remake-tooth" placeholder="치아 번호" style="flex:1;">
+        <input class="form-input" id="new-remake-reason" placeholder="리메이크 사유" style="flex:2;">
+        <button class="btn btn-primary btn-sm" onclick="addRemake(${id})">추가</button>
+      </div>
+    </div>
+    <div class="modal-footer" style="margin-top:16px;">
+      <button class="btn btn-secondary" onclick="closeModal('clinicInfoModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveClinicEdit(${id})">저장</button>
+    </div>
+  `;
+  
+  document.getElementById('clinicInfoContent').innerHTML = html;
+  openModal('clinicInfoModal');
+}
+
+function addRemake(clinicId) {
+  const tooth = document.getElementById('new-remake-tooth').value.trim();
+  const reason = document.getElementById('new-remake-reason').value.trim();
+  if(!tooth || !reason) {
+    alert('치아 번호와 사유를 입력해주세요');
+    return;
+  }
+  const clinic = clinics.find(c => c.id === clinicId);
+  if(clinic) {
+    if(!clinic.remakes) clinic.remakes = [];
+    clinic.remakes.push({
+      date: new Date().toISOString().slice(0,10),
+      tooth,
+      reason
+    });
+    saveData();
+    editClinic(clinicId);
+    toast('✅ 리메이크 기록 추가');
+  }
+}
+
+function deleteRemake(clinicId, index) {
+  const clinic = clinics.find(c => c.id === clinicId);
+  if(clinic && clinic.remakes) {
+    clinic.remakes.splice(index, 1);
+    saveData();
+    editClinic(clinicId);
+  }
+}
+
+async function saveClinicEdit(id) {
+  const clinic = clinics.find(c => c.id === id);
+  if(clinic) {
+    clinic.name = document.getElementById('edit-clinic-name').value.trim();
+    clinic.businessNumber = document.getElementById('edit-clinic-biz').value.trim();
+    clinic.phone = document.getElementById('edit-clinic-phone').value.trim();
+    clinic.director = document.getElementById('edit-clinic-director').value.trim();
+    clinic.email = document.getElementById('edit-clinic-email').value.trim();
+    
+    const pwInput = document.getElementById('edit-clinic-pw').value.trim();
+    if(pwInput) {
+      clinic.password = await hashPassword(pwInput);
+    }
+    clinic.priceAdjust = parseInt(document.getElementById('edit-clinic-priceadjust').value) || 0;
+    clinic.price_adjust = clinic.priceAdjust;
+    
+    // 권한 저장
+    if(!clinic.permissions) clinic.permissions = { statistics: false, sales: false, archive: false };
+    clinic.permissions.statistics = document.getElementById('perm-statistics')?.checked || false;
+    clinic.permissions.sales = document.getElementById('perm-sales')?.checked || false;
+    clinic.permissions.archive = document.getElementById('perm-archive')?.checked || false;
+    
+    // 보철별 단가 저장
+    if(!clinic.prices) clinic.prices = {};
+    prosthetics.forEach(p => {
+      const priceEl = document.getElementById('edit-price-' + p.name);
+      if(priceEl) clinic.prices[p.name] = parseInt(priceEl.value) || 0;
+    });
+    
+    saveData();
+    closeModal('clinicInfoModal');
+    renderClinics();
+    updateClinicFilter();
+    populateSelects();
+    updateSidebarClinicSelect();
+    toast('✅ 수정 완료');
+  }
+}
+
+function deleteClinic(id) {
+  if(!confirm('삭제하시겠습니까?')) return;
+  const name = clinics.find(c => c.id === id).name;
+  const hasCase = cases.find(c => c.clinic === name);
+  if(hasCase) {
+    alert('해당 치과의 케이스가 존재하여 삭제할 수 없습니다');
+    return;
+  }
+  clinics = clinics.filter(c => c.id !== id);
+  saveData();
+  renderClinics();
+  updateClinicFilter();
+  populateSelects();
+  updateSidebarClinicSelect();
+  toast('🗑️ 삭제 완료');
+}
+
+// ═══════════════════════════════════
+// 보철 종류
+// ═══════════════════════════════════
+function renderProsthetics() {
+  const list = document.getElementById('prostheticList');
+  list.innerHTML = prosthetics.map((p,i) => `<div class="prosthetic-item">
+    <span class="prosthetic-name">${p.name}</span>
+    <input type="number" value="${p.price}" onchange="updateProstheticPrice(${i},this.value)" placeholder="단가">
+    <span>원</span>
+    <button class="btn btn-ghost btn-sm" onclick="deleteProsthetic(${i})">✕</button>
+  </div>`).join('');
+}
+
+function addProsthetic() {
+  const name = prompt('보철 종류명을 입력하세요:');
+  if(!name || prosthetics.find(p => p.name === name)) {
+    alert('이미 존재하거나 올바르지 않은 이름입니다');
+    return;
+  }
+  prosthetics.push({name, price:0});
+  saveData();
+  renderProsthetics();
+  populateSelects();
+}
+
+function updateProstheticPrice(idx, price) {
+  prosthetics[idx].price = parseInt(price) || 0;
+  saveData();
+}
+
+function deleteProsthetic(idx) {
+  if(!confirm('삭제하시겠습니까?')) return;
+  const name = prosthetics[idx].name;
+  if(cases.find(c => c.type === name)) {
+    alert('사용 중인 보철 종류입니다');
+    return;
+  }
+  prosthetics.splice(idx, 1);
+  saveData();
+  renderProsthetics();
+  populateSelects();
+}
+
+// ═══════════════════════════════════
+// 설정
+// ═══════════════════════════════════
+function toggleShowPrice() {
+  settings.showPriceToClinic = !settings.showPriceToClinic;
+  document.getElementById('showPriceToggle').classList.toggle('active', settings.showPriceToClinic);
+  saveData();
+  renderTable();
+  toast(settings.showPriceToClinic ? '✅ 가격이 치과에 공개됩니다' : '✅ 가격이 숨겨졌습니다');
+}
+
+async function changePassword() {
+  const current = document.getElementById('currentPw').value;
+  const newPw = document.getElementById('newPw').value;
+  const confirm = document.getElementById('confirmPw').value;
+  
+  if(newPw !== confirm) {
+    alert('새 비밀번호가 일치하지 않습니다');
+    return;
+  }
+  
+  if(newPw.length < 6) {
+    alert('비밀번호는 6자 이상이어야 합니다');
+    return;
+  }
+  
+  // NAS API로 비밀번호 변경
+  try {
+    await apiSaveSettings({ adminPassword: newPw });
+    closeModal('passwordModal');
+    alert('비밀번호가 변경되었습니다.\n다음 로그인부터 새 비밀번호를 사용하세요.');
+    toast('🔐 비밀번호 변경 완료');
+  } catch (err) {
+    alert('비밀번호 변경 실패: ' + err.message);
+  }
+}
+
+// ═══════════════════════════════════
+// 유틸
+// ═══════════════════════════════════
+function updateClinicFilter() {
+  const select = document.getElementById('clinicFilter');
+  const listSelect = document.getElementById('listClinicFilter');
+  const options = '<option value="all">전체 치과</option>' + clinics.map(c => '<option value="' + c.name + '">' + c.name + '</option>').join('');
+  const listOptions = '<option value="all">🏢 전체 거래처</option>' + clinics.map(c => '<option value="' + c.name + '">' + c.name + '</option>').join('');
+  select.innerHTML = options;
+  if(listSelect) listSelect.innerHTML = listOptions;
+}
+
+function populateSelects() {
+  const clinicOptions = '<option value="">치과 선택</option>' + clinics.map(c => '<option value="' + c.name + '">' + c.name + '</option>').join('');
+  const typeOptions = prosthetics.map(p => '<option value="' + p.name + '">' + p.name + '</option>').join('');
+  
+  ['reg-clinic','m-clinic'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = clinicOptions;
+  });
+  
+  ['reg-type','m-type'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = typeOptions;
+  });
+}
+
+async function submitRegister() {
+  const btn = document.getElementById('regSubmitBtn');
+  const clinic = document.getElementById('reg-clinic').value;
+  const patient = document.getElementById('reg-patient').value.trim();
+  const tooth = document.getElementById('reg-tooth').value.trim();
+  const type = document.getElementById('reg-type').value;
+  const unitType = document.querySelector('input[name="reg-unitType"]:checked').value;
+  const isRemake = document.getElementById('reg-isRemake').checked;
+  
+  // 필수 항목 검증
+  const missing = [];
+  if(!clinic) missing.push('치과');
+  if(!patient) missing.push('환자명');
+  if(!tooth) missing.push('치식');
+  if(!type) missing.push('보철 종류');
+  
+  if(missing.length > 0) {
+    alert(missing.join(', ') + '을(를) 입력해주세요');
+    return;
+  }
+  
+  // 로딩 시작
+  btn.disabled = true;
+  btn.textContent = '등록 중...';
+  showLoadingOverlay('등록 중입니다...');
+  
+  try {
+    // 데이터 등록
+    cases.unshift({
+      id: Date.now(),
+      date: new Date().toISOString().slice(0,10),
+      createdAt: new Date().toISOString(),
+      clinic,
+      patientOriginal: patient,
+      patient: maskPatientName(patient),
+      tooth,
+      type,
+      unitType,
+      isRemake,
+      status: 'working',
+      shipDate: document.getElementById('reg-ship').value,
+      memo: document.getElementById('reg-memo').value.trim()
+    });
+    
+    // localStorage에만 즉시 저장
+    localStorage.setItem('iroom_cases', JSON.stringify(cases));
+    renderTable();
+    showPage('list');
+  } catch(error) {
+    console.log('등록 오류:', error);
+  } finally {
+    // 반드시 로딩 제거
+    const loadingEl = document.getElementById('loadingOverlay');
+    if(loadingEl) loadingEl.remove();
+  }
+  
+  // 버튼 복원
+  btn.disabled = false;
+  btn.textContent = '등록';
+  
+  // 완료 모달 표시
+  showCompleteModal('접수 완료', `${clinic}에 접수되었습니다`);
+  
+  // 데이터 저장 (백그라운드)
+  try { saveData(); } catch(e) {}
+}
+function showCompleteModal(title, message) {
+  // 모든 로딩/모달 오버레이 제거
+  document.querySelectorAll('[id*="Overlay"], .modal-bg').forEach(el => {
+    if(el.id !== 'registerModal' && el.id !== 'clinicModal' && el.id !== 'passwordModal' && el.id !== 'forgotModal' && el.id !== 'clinicInfoModal' && el.id !== 'toothModal' && el.id !== 'archiveViewModal') {
+      el.remove();
+    }
+  });
+  
+  // 직접 로딩 오버레이 제거 시도
+  const overlay = document.getElementById('loadingOverlay');
+  if(overlay) overlay.remove();
+  
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+  modal.innerHTML = `
+    <div style="background:#fff;padding:40px;border-radius:16px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:popIn 0.3s ease;">
+      <div style="font-size:48px;margin-bottom:16px;">✅</div>
+      <div style="font-size:20px;font-weight:700;margin-bottom:8px;">${title}</div>
+      <div style="color:#5a6075;font-size:14px;">${message}</div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  // 효과음 제거됨
+  // playSuccessSound();
+  
+  setTimeout(() => modal.remove(), 2500);
+}
+
+// 메모/사진 편집 모달
+let currentEditCaseId = null;
+
+function editCaseMemo(id) {
+  currentEditCaseId = id;
+  const c = cases.find(x => x.id === id);
+  if(!c) return;
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.id = 'memoPhotoModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+  modal.innerHTML = `
+    <div style="background:#fff;padding:24px;border-radius:16px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto;">
+      <h3 style="margin-bottom:16px;">📝 메모 및 사진 편집</h3>
+      <div style="margin-bottom:16px;">
+        <label style="font-weight:600;display:block;margin-bottom:8px;">메모</label>
+        <textarea id="edit-memo-text" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;min-height:80px;font-family:inherit;">${c.memo || ''}</textarea>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-weight:600;display:block;margin-bottom:8px;">사진 (최대 5장)</label>
+        <div id="photo-preview-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px;">
+          ${(c.photos || []).map((p, i) => '<div style="position:relative;aspect-ratio:1;background:#f0f0f0;border-radius:8px;overflow:hidden;"><img src="' + p + '" style="width:100%;height:100%;object-fit:cover;"><button type="button" onclick="removePhoto(' + i + ')" style="position:absolute;top:2px;right:2px;background:red;color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;">×</button></div>').join('')}
+        </div>
+        <input type="file" id="photo-upload" accept="image/*" multiple style="display:none;">
+        <button type="button" onclick="document.getElementById(\'photo-upload\').click()" class="btn btn-secondary btn-sm" ${(c.photos || []).length >= 5 ? 'disabled' : ''}>+ 사진 추가</button>
+        <span style="font-size:12px;color:#666;">${(c.photos || []).length}/5</span>
+      </div>
+      <div style="text-align:right;gap:8px;display:flex;justify-content:flex-end;">
+        <button type="button" onclick="closeModal('memoPhotoModal')" class="btn btn-secondary">취소</button>
+        <button type="button" onclick="saveCaseMemo()" class="btn btn-primary">저장</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  document.getElementById('photo-upload').addEventListener('change', function() {
+    handlePhotoUpload(this);
+  });
+}
+
+function handlePhotoUpload(input) {
+  const c = cases.find(x => x.id === currentEditCaseId);
+  if(!c) return;
+  
+  const files = Array.from(input.files);
+  const currentCount = (c.photos || []).length;
+  const remaining = 5 - currentCount;
+  
+  if(remaining <= 0) {
+    alert('최대 5장까지 추가 가능합니다');
+    return;
+  }
+  
+  const toAdd = files.slice(0, remaining);
+  
+  toAdd.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      if(!c.photos) c.photos = [];
+      if(c.photos.length < 5) {
+        c.photos.push(e.target.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  
+  setTimeout(() => {
+    editCaseMemo(currentEditCaseId);
+  }, 100);
+}
+
+function removePhoto(index) {
+  const c = cases.find(x => x.id === currentEditCaseId);
+  if(c && c.photos) {
+    c.photos.splice(index, 1);
+    renderTable();
+    editCaseMemo(currentEditCaseId);
+  }
+}
+
+function saveCaseMemo() {
+  const c = cases.find(x => x.id === currentEditCaseId);
+  if(c) {
+    c.memo = document.getElementById('edit-memo-text').value;
+    saveData();
+    closeModal('memoPhotoModal');
+    toast('✅ 저장 완료');
+    renderTable();
+  }
+}
+
+function viewPhotos(id) {
+  const c = cases.find(x => x.id === id);
+  if(!c || !c.photos || !c.photos.length) return;
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:99999;';
+  modal.innerHTML = `
+    <div style="text-align:center;max-width:90%;max-height:90%;">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:20px;">
+        ${c.photos.map(p => '<img src="' + p + '" style="max-width:300px;max-height:300px;object-fit:contain;border-radius:8px;">').join('')}
+      </div>
+      <button onclick="this.closest('.modal-bg').remove()" class="btn btn-primary">닫기</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// 로딩 오버레이 표시
+function showLoadingOverlay(message) {
+  const existing = document.getElementById('loadingOverlay');
+  if(existing) existing.remove();
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'loadingOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+  overlay.innerHTML = `
+    <div style="background:#fff;padding:30px 50px;border-radius:12px;text-align:center;">
+      <div style="width:40px;height:40px;border:4px solid #e2e5ee;border-top-color:#2563eb;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto;"></div>
+      <div style="margin-top:15px;font-weight:600;color:#1a1d2e;">${message}</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+// 효과음 재생
+function playSuccessSound() {
+  try {
+    //AudioContext 사용
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if(!AudioContext) return;
+    
+    const audioCtx = new AudioContext();
+    
+    //oscillator로 효과음 생성
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    // 알림음 효과 (올라가는音)
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+    oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+    oscillator.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+    
+    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+    
+    oscillator.start(audioCtx.currentTime);
+    oscillator.stop(audioCtx.currentTime + 0.4);
+  } catch(e) {
+    console.log('효과음 재생 실패:', e);
+  }
+}
+
+async function submitQuickRegister() {
+  const btn = document.getElementById('quickSubmitBtn');
+  const clinic = document.getElementById('m-clinic').value;
+  const patient = document.getElementById('m-patient').value.trim();
+  const tooth = document.getElementById('m-tooth').value.trim();
+  const type = document.getElementById('m-type').value;
+  const unitType = document.querySelector('input[name="m-unitType"]:checked').value;
+  const isRemake = document.getElementById('m-isRemake').checked;
+  
+  // 필수 항목 검증
+  const missing = [];
+  if(!clinic) missing.push('치과');
+  if(!patient) missing.push('환자명');
+  if(!tooth) missing.push('치식');
+  if(!type) missing.push('보철 종류');
+  
+  if(missing.length > 0) {
+    alert(missing.join(', ') + '을(를) 입력해주세요');
+    return;
+  }
+  
+  // 로딩 시작
+  btn.disabled = true;
+  btn.textContent = '등록 중...';
+  showLoadingOverlay('등록 중입니다...');
+  
+  try {
+    // 데이터 등록
+    cases.unshift({
+      id: Date.now(),
+      date: new Date().toISOString().slice(0,10),
+      createdAt: new Date().toISOString(),
+      clinic,
+      patientOriginal: patient,
+      patient: maskPatientName(patient),
+      tooth,
+      type,
+      unitType,
+      isRemake,
+      status: 'working',
+      shipDate: document.getElementById('m-ship').value,
+      memo: document.getElementById('m-memo').value.trim()
+    });
+    
+    // localStorage에만 즉시 저장
+    localStorage.setItem('iroom_cases', JSON.stringify(cases));
+    renderTable();
+    closeModal('registerModal');
+  } catch(error) {
+    console.log('등록 오류:', error);
+  } finally {
+    // 반드시 로딩 제거
+    const loadingEl = document.getElementById('loadingOverlay');
+    if(loadingEl) loadingEl.remove();
+  }
+  
+  // 버튼 복원
+  btn.disabled = false;
+  btn.textContent = '등록';
+  
+  // 완료 모달 표시
+  showCompleteModal('접수 완료', `${clinic}에 접수되었습니다`);
+  
+  // 데이터 저장 (백그라운드)
+  try { saveData(); } catch(e) {}
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ═══════════════════════════════════
+// FDI 치아 선택기
+// ═══════════════════════════════════
+let selectedTeeth = [];
+const upperTeeth = ['18','17','16','15','14','13','12','11','21','22','23','24','25','26','27','28'];
+const lowerTeeth = ['48','47','46','45','44','43','42','41','31','32','33','34','35','36','37','38'];
+
+function openToothSelector(inputId) {
+  document.getElementById('toothInputTarget').value = inputId;
+  const input = document.getElementById(inputId);
+  const current = input.value.trim();
+  selectedTeeth = current ? current.split(',').map(t => t.trim()).filter(t => t) : [];
+  renderToothGrid();
+  openModal('toothModal');
+}
+
+function renderToothGrid() {
+  const upperGrid = document.getElementById('toothGridUpper');
+  const lowerGrid = document.getElementById('toothGridLower');
+  
+  upperGrid.innerHTML = upperTeeth.map(t => 
+    `<button class="tooth-btn ${selectedTeeth.includes(t) ? 'selected' : ''}" onclick="toggleTooth('${t}')">${t}</button>`
+  ).join('');
+  
+  lowerGrid.innerHTML = lowerTeeth.map(t => 
+    `<button class="tooth-btn ${selectedTeeth.includes(t) ? 'selected' : ''}" onclick="toggleTooth('${t}')">${t}</button>`
+  ).join('');
+  
+  document.getElementById('selectedTeethDisplay').textContent = selectedTeeth.length > 0 ? selectedTeeth.join(', ') : '없음';
+}
+
+function toggleTooth(num) {
+  const idx = selectedTeeth.indexOf(num);
+  if(idx >= 0) {
+    selectedTeeth.splice(idx, 1);
+  } else {
+    selectedTeeth.push(num);
+  }
+  renderToothGrid();
+}
+
+function confirmToothSelection() {
+  const inputId = document.getElementById('toothInputTarget').value;
+  document.getElementById(inputId).value = selectedTeeth.join(', ');
+  closeModal('toothModal');
+}
+
+// ═══════════════════════════════════
+// 데이터 아카이브
+// ═══════════════════════════════════
+let archives = [];
+
+function loadArchives() {
+  try {
+    const saved = localStorage.getItem('iroom_archives');
+    if(saved) archives = JSON.parse(saved);
+  } catch(e) {
+    archives = [];
+  }
+}
+
+function saveArchives() {
+  localStorage.setItem('iroom_archives', JSON.stringify(archives));
+}
+
+function updateArchivePeriodInfo() {
+  const period = parseInt(document.getElementById('archivePeriod').value);
+  const baseDate = document.getElementById('archiveBaseDate').value || new Date().toISOString().slice(0,10);
+  const base = new Date(baseDate);
+  const start = new Date(base.getFullYear(), base.getMonth() - period + 1, 1);
+  const end = new Date(base.getFullYear(), base.getMonth() + 1, 0);
+  
+  const startStr = start.toISOString().slice(0,10);
+  const endStr = end.toISOString().slice(0,10);
+  const filtered = cases.filter(c => c.date >= startStr && c.date <= endStr);
+  
+  document.getElementById('archivePeriodInfo').innerHTML = `
+    <strong>기간:</strong> ${start.getFullYear()}년 ${start.getMonth()+1}월 ~ ${end.getFullYear()}년 ${end.getMonth()+1}월<br>
+    <strong>대상 케이스:</strong> ${filtered.length}건
+  `;
+  return {start: startStr, end: endStr, count: filtered.length};
+}
+
+function createArchive() {
+  const {start, end, count} = updateArchivePeriodInfo();
+  if(count === 0) {
+    alert('해당 기간에 저장할 케이스가 없습니다');
+    return;
+  }
+  
+  if(!confirm(`${count}건을 아카이브로 생성합니다. 원본 데이터는 보존됩니다.`)) return;
+  
+  const archive = {
+    id: 'archive_' + Date.now(),
+    name: start.slice(0,7) + ' 데이터',
+    period: {start, end},
+    caseCount: count,
+    createdAt: new Date().toISOString().slice(0,10),
+    cases: cases.filter(c => c.date >= start && c.date <= end)
+  };
+  
+  archives.push(archive);
+  saveArchives();
+  renderArchiveList();
+  toast('✅ 아카이브 생성 완료');
+}
+
+function createArchiveAndDelete() {
+  const {start, end, count} = updateArchivePeriodInfo();
+  if(count === 0) {
+    alert('해당 기간에 저장할 케이스가 없습니다');
+    return;
+  }
+  
+  if(!confirm(`${count}건을 아카이브로 생성하고 원본 데이터를 삭제합니다.`)) return;
+  
+  const archive = {
+    id: 'archive_' + Date.now(),
+    name: start.slice(0,7) + ' 데이터',
+    period: {start, end},
+    caseCount: count,
+    createdAt: new Date().toISOString().slice(0,10),
+    cases: cases.filter(c => c.date >= start && c.date <= end)
+  };
+  
+  archives.push(archive);
+  cases = cases.filter(c => c.date < start || c.date > end);
+  saveArchives();
+  saveData();
+  renderTable();
+  renderArchiveList();
+  toast('✅ 아카이브 생성 및 원본 삭제 완료');
+}
+
+function renderArchiveList() {
+  loadArchives();
+  const list = document.getElementById('archiveList');
+  
+  if(archives.length === 0) {
+    list.innerHTML = '<p style="color:var(--text3);text-align:center;padding:20px;">보관된 아카이브가 없습니다</p>';
+    return;
+  }
+  
+  let totalSales = 0;
+  archives.forEach(a => {
+    a.cases.forEach(c => {
+      totalSales += calculateTotalPrice(c.type, c.clinic, c.tooth, c.isRemake || false);
+    });
+  });
+  
+  list.innerHTML = archives.map(a => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-weight:700;font-size:15px;">📁 ${a.name}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px;">
+          ${a.period.start} ~ ${a.period.end} | ${a.caseCount}건 | 생성일: ${a.createdAt}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary btn-sm" onclick="viewArchive('${a.id}')">👁️ 보기</button>
+        <button class="btn btn-secondary btn-sm" onclick="downloadArchive('${a.id}')">📥 내보내기</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteArchive('${a.id}')">🗑️ 삭제</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+let currentArchiveData = [];
+
+function viewArchive(id) {
+  const archive = archives.find(a => a.id === id);
+  if(!archive) return;
+  
+  currentArchiveData = [...archive.cases];
+  document.getElementById('archiveViewTitle').textContent = '📂 ' + archive.name;
+  document.getElementById('archiveSearch').value = '';
+  filterArchiveView();
+  openModal('archiveViewModal');
+}
+
+function filterArchiveView() {
+  const keyword = document.getElementById('archiveSearch').value.trim().toLowerCase();
+  const filtered = keyword ? currentArchiveData.filter(c => 
+    c.patient.toLowerCase().includes(keyword) ||
+    (c.chart && c.chart.toLowerCase().includes(keyword)) ||
+    c.tooth.toLowerCase().includes(keyword) ||
+    c.clinic.toLowerCase().includes(keyword)
+  ) : currentArchiveData;
+  
+  const showPrice = currentUser.type === 'admin' || settings.showPriceToClinic;
+  let totalSales = 0;
+  
+  let html = '';
+  filtered.forEach(c => {
+    const isRemake = c.isRemake || false;
+    const price = calculateTotalPrice(c.type, c.clinic, c.tooth, isRemake);
+    const toothCount = getToothCount(c.tooth);
+    const typeLabel = isRemake ? '🔄 리메이크' : (c.unitType === 'bridge' ? '브릿지' : '싱글');
+    totalSales += price;
+    html += '<tr><td>' + c.date + '</td><td>' + c.clinic + '</td><td>' + getDisplayPatient(c) + '</td><td>' + (c.chart || '—') + '</td><td>' + c.tooth + '</td><td>' + c.type + '</td><td>' + typeLabel + '</td><td>' + toothCount + '개</td><td>' + (showPrice ? price.toLocaleString() + '원' : '***') + '</td></tr>';
+  });
+  
+  document.getElementById('archiveViewBody').innerHTML = html;
+  document.getElementById('archiveViewSummary').textContent = `총 ${filtered.length}건 | 매출 합계: ${showPrice ? totalSales.toLocaleString() + '원' : '***'}`;
+}
+
+function downloadArchive(id) {
+  const archive = archives.find(a => a.id === id);
+  if(!archive) return;
+  
+  const data = archive.cases.map(c => ({
+   접수일: c.date,
+    치과: c.clinic,
+    환자: c.patient,
+    차트번호: c.chart || '',
+    치아: c.tooth,
+    보철: c.type,
+    상태: statusMap[c.status]?.label || c.status,
+    출고일: c.shipDate || '',
+    메모: c.memo || ''
+  }));
+  
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '아카이브');
+  XLSX.writeFile(wb, 'iroom_archive_' + archive.name + '.xlsx');
+  toast('📥 아카이브 다운로드 완료');
+}
+
+function exportArchiveExcel() {
+  downloadArchive(archives.find(a => a.name === document.getElementById('archiveViewTitle').textContent.replace('📂 ', ''))?.id || '');
+}
+
+function mergeArchiveToCurrent() {
+  if(!confirm('아카이브 데이터를 현재 데이터에 병합하시겠습니까?')) return;
+  
+  const title = document.getElementById('archiveViewTitle').textContent.replace('📂 ', '');
+  const archive = archives.find(a => a.name === title);
+  if(!archive) return;
+  
+  archive.cases.forEach(c => {
+    c.id = Date.now() + Math.random();
+    cases.push(c);
+  });
+  
+  saveData();
+  renderTable();
+  closeModal('archiveViewModal');
+  toast('🔄 데이터 병합 완료');
+}
+
+function deleteArchive(id) {
+  if(!confirm('이 아카이브를 삭제하시겠습니까?')) return;
+  archives = archives.filter(a => a.id !== id);
+  saveArchives();
+  renderArchiveList();
+  toast('🗑️ 아카이브 삭제 완료');
+}
+
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.textContent = msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// 브라우저 알림
+let notificationEnabled = false;
+
+async function requestNotificationPermission() {
+  if('Notification' in window) {
+    if(Notification.permission === 'granted') {
+      notificationEnabled = true;
+    } else if(Notification.permission !== 'denied') {
+      const permission = await Notification.requestPermission();
+      notificationEnabled = permission === 'granted';
+    }
+  }
+}
+
+function showBrowserNotification(title, body, icon = '🔔') {
+  if(notificationEnabled || ('Notification' in window && Notification.permission === 'granted')) {
+    try {
+      new Notification(title, { body, icon: '🦷' });
+    } catch(e) {}
+  }
+}
+
+// 상태 변경 시 알림
+const originalToast = toast;
+toast = function(msg) {
+  originalToast(msg);
+  
+  // 상태 변경 관련 알림이면 브라우저 알림도
+  if(msg.includes('상태') || msg.includes('완료') || msg.includes('배송')) {
+    showBrowserNotification('이룸덴탈랩', msg);
+  }
+};
+
+// 페이지 로드 시 알림 권한 요청
+document.addEventListener('DOMContentLoaded', () => {
+  requestNotificationPermission();
+});
+
+// ═══════════════════════════════════
+// 데이터 백업/복원
+// ═══════════════════════════════════
+function backupData() {
+  const backup = {
+    version: '1.0',
+    timestamp: new Date().toISOString(),
+    cases: cases,
+    clinics: clinics,
+    prosthetics: prosthetics
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'iroom-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('백업 파일이 다운로드되었습니다');
+}
+
+async function restoreData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!confirm('현재 데이터가 백업 파일로 교체됩니다. 계속하시겠습니까?')) {
+    input.value = '';
+    return;
+  }
+  try {
+    const text = await file.text();
+    const backup = JSON.parse(text);
+    if (!backup.cases || !backup.clinics) throw new Error('유효하지 않은 백업 파일');
+    cases = backup.cases || [];
+    clinics = backup.clinics || [];
+    prosthetics = backup.prosthetics || [];
+    await saveData();
+    localStorage.setItem('iroom_cases', JSON.stringify(cases));
+    localStorage.setItem('iroom_clinics', JSON.stringify(clinics));
+    localStorage.setItem('iroom_prosthetics', JSON.stringify(prosthetics));
+    renderTable();
+    renderClinics();
+    renderProsthetics();
+    updateClinicFilter();
+    populateSelects();
+    toast('데이터가 복원되었습니다');
+  } catch(e) {
+    toast('복원 실패: ' + e.message);
+  }
+  input.value = '';
+}
+
+// ═══════════════════════════════════
+// 데이터 최적화 (용량 절감)
+// ═══════════════════════════════════
+function optimizeData() {
+  if (!confirm('데이터를 최적화하시겠습니까?\\n중복 patientOriginal 데이터가 삭제됩니다.')) return;
+  
+  let count = 0;
+  
+  // patientOriginal 제거
+  cases.forEach(c => {
+    if (c.patientOriginal) {
+      delete c.patientOriginal;
+      count++;
+    }
+  });
+  
+  // 빈 데이터 정리
+  cases = cases.filter(c => c.clinic && c.date);
+  
+  // localStorage 업데이트
+  localStorage.setItem('iroom_cases', JSON.stringify(cases));
+  
+  // Supabase에 저장
+  saveData();
+  
+  renderTable();
+  toast('데이터 최적화 완료: ' + count + '개 항목 정리');
+}
+
+// ═══════════════════════════════════
+// 실시간 알림 (관리자용)
+// ═══════════════════════════════════
+let realtimeChannel = null;
+
+function subscribeToRealtime() {
+  if (realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
+  if (currentUser?.type !== 'admin') return;
+  
+  realtimeChannel = supabaseClient.channel('iroom-realtime')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'cases' }, (payload) => {
+      showBrowserNotification('새 케이스', payload.new.clinic + '에서 케이스 등록');
+      toast('새 케이스: ' + payload.new.clinic);
+      loadData();
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'clinics' }, (payload) => {
+      showBrowserNotification('새 거래처', payload.new.name + ' 등록됨');
+      toast('새 거래처: ' + payload.new.name);
+      loadData();
+    })
+    .subscribe();
+}
+
+// 초기화
+loadData();
+loadArchives();
+updateArchivePeriodInfo();
+</script>
+</body>
+</html>
